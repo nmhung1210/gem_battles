@@ -1,0 +1,16 @@
+{
+  "appID": "cc016f7dc393480daa8ccaf090ea41f5",
+  "dependencies": {
+    "devkit-core": "https://github.com/gameclosure/devkit-core#"
+  },
+  "shortName": "GemBattles",
+  "studio": {
+    "domain": "",
+    "name": "Hung Nguyen",
+    "stagingDomain": ""
+  },
+  "supportedOrientations": [
+    "portrait"
+  ],
+  "title": "Gem's Battles"
+}
