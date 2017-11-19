@@ -124,7 +124,7 @@ exports = Class(View, function(supr) {
         while(tmp && tmp.getType() == gem.type())
         {
             result.push(tmp);
-            tmp = tmp.getNearItem("left");
+            tmp = tmp.getNearItem(direction);
         }
         return result;
     }
