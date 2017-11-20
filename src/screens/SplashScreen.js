@@ -2,9 +2,9 @@ import ui.View;
 import ui.TextView as TextView;
 import ui.ImageScaleView as ImageScaleView;
 import ui.ImageView;
-import ui.resource.loader as loader;
+import ui.resource.loader as Loader;
 import ui.widget.ButtonView as ButtonView;
-
+import ui.SpriteView as SpriteView;
 
 exports = Class(ui.View, function(supr) {
     
@@ -21,30 +21,39 @@ exports = Class(ui.View, function(supr) {
         var view = this;
         this.app = opts.app;
         this.rootView = opts.rootView;
-        
-        var loadingView = this.showLoadingAnimation();            
-        setTimeout(function() {
-            loader.preload(['resources/images/', 'resources/sound'], function() {
-                loadingView.hide();
-                view.build();
-            }); 
-        }, 1);
+        this.startLoader();
     };       
+
+    this.startLoader = function()
+    {
+        var mthis = this;
+        this.showLoading();
+        Loader.preload(['resources/images/', 'resources/sound'], function() {
+            mthis.hideLoading();
+            mthis.initUI();
+        }); 
+    }
     
-    this.showLoadingAnimation = function()
+    this.showLoading = function()
     {
         var screenWidth = this.app.screenWidth();
         var screenHeight = this.app.screenHeight();
-        return new LoadingSheet({
+        this._loadingView = this._loadingView || new LoadingAnimation({
             superview: this,
             x: (screenWidth / 2 - 64),
             y: (screenHeight / 2 - 64),
             width: 128,
             height: 128,            
         });
+        this._loadingView.show();
+    }
+
+    this.hideLoading = function()
+    {
+        this._loadingView && this._loadingView.hide();
     }
     
-    this.build = function() {
+    this.initUI = function() {
         var screenWidth = this.app.screenWidth();
         var screenHeight = this.app.screenHeight();
         var mthis = this;
@@ -98,24 +107,13 @@ exports = Class(ui.View, function(supr) {
     }
 });
 
-var LoadingSheet = Class(ui.ImageView, function(supr) {
-    
+var LoadingAnimation = Class(SpriteView, function(supr) {
     this.init = function(opts) {
         opts = merge(opts, {
-            image: "resources/images/ui/time_icon_0001.png"
+            url: "resources/images/ui/loading/loading",
+            frameRate: 30
         });
-        supr(this, "init", [opts]);
-        this._dt = 0;
-        this._index = 0;        
-    }
-    
-    this.tick = function(dt) {        
-        this._dt += dt;
-        if (this._dt > 50) 
-        {
-            this._dt %= 50;
-            this._index = (this._index + 1) % 14;
-            this.setImage("resources/images/ui/time_icon_" + (10000+this._index+1).toString().substr(1) +".png");            
-        }
+        supr(this, 'init', [opts]);
+        this.startAnimation('anim', {loop: true});
     }
 });
