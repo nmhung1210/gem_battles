@@ -103,20 +103,23 @@ exports = Class(View, function(supr) {
                 });
 			}
         }
+        this.resetBoard();
     }
 
     this.resetBoard = function()
     {
+        var cols  = this._opts.cols;
+        var rows = this._opts.rows;
         var gems = this.gems;
         for (var y = 0; y < rows; y++) {
 			for (var x = 0; x < cols; x++) {
                 gem = gems[y][x];
                 gem.setType(Math.floor(Math.random() * 5) + 1  );
-                gem.updateMatches();
+                gem.updateNearMatches();
                 while(gem.isMatches())
                 {
                     gem.setType(Math.floor(Math.random() * 5) + 1  );
-                    gem.updateMatches();
+                    gem.updateNearMatches();
                 }
 			}
         }
@@ -126,10 +129,10 @@ exports = Class(View, function(supr) {
     {
         var selected_gem = this.selected_gem;
         var swap_direction = this.swap_direction;
-        if(selected_gem && swap_direction)
+        if(selected_gem && !selected_gem.isLocked() && swap_direction)
         {
             var swap_gem = selected_gem.getNearItem(swap_direction);
-            if(swap_gem)
+            if(swap_gem && !swap_gem.isLocked())
             {
                 var mthis = this;
                 selected_gem.swap(swap_gem).then(function(){
@@ -148,7 +151,26 @@ exports = Class(View, function(supr) {
 
     this.handleMatches = function(gem)
     {
-        
+        var matches = gem.getNearMatches();
+        var fallCols = {};
+        for(var i=0; i< matches.length; i++)
+        {
+            var item = matches[i];
+            item.fired();
+            fallCols[item._col] = (fallCols[item._col] || 0)+1;
+        }
+        for(var col in fallCols)
+        {
+            this.fallColDown(col, fallCols[col]);
+        }                
+    }
+
+    this.fallColDown = function(col, depth)
+    {
+        var cols  = this._opts.cols;
+        var rows = this._opts.rows;
+        var gems = this.gems;
+
     }
    
     this.tick = function(dt)
