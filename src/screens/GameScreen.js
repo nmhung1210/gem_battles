@@ -10,6 +10,8 @@ import event.input.drag as drag;
 import src.objects.Gem as Gem;
 import src.objects.Board as Board;
 
+import src.common.define as DEF;
+
 exports = Class(ui.View, function(supr) {
     
     this.init = function(opts)

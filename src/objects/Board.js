@@ -1,7 +1,9 @@
 import ui.View as View;
 import src.objects.Gem as Gem;
 import math.geom.Vec2D as Vec2D;
-import src.common.constants as Constants;
+import src.common.define as DEF;
+
+
 
 exports = Class(View, function(supr) {
     
@@ -17,7 +19,7 @@ exports = Class(View, function(supr) {
         this.swap_direction = null;
         this.gems = [];
         
-        this.resetBoard();
+        this.initBoard();
         this.handleInput();
        
     };     
@@ -45,7 +47,7 @@ exports = Class(View, function(supr) {
                     y: point.y - startTouchPoint.y
                 });
                 var mag = delta.getMagnitude();
-                if(mag > Constants.SWIPE_GEM_MAGNITUDE)
+                if(mag > DEF.SWIPE_GEM_MAGNITUDE)
                 {
                     if (Math.abs(delta.y) > Math.abs(delta.x))
                     {
@@ -64,21 +66,21 @@ exports = Class(View, function(supr) {
         });
     }
 
-    this.resetBoard = function()
+    this.initBoard = function()
     {
-        var mthis = this;
-        var width = mthis._opts.width;
-        var height = mthis._opts.height;
-        var cols  = mthis._opts.cols;
-        var rows = mthis._opts.rows;
-        var cellWidth = mthis._opts.cellWidth;
-        var cellHeight = mthis._opts.cellHeight;
+        var width = this._opts.width;
+        var height = this._opts.height;
+        var cols  = this._opts.cols;
+        var rows = this._opts.rows;
+        var cellWidth = this._opts.cellWidth;
+        var cellHeight = this._opts.cellHeight;
+        var gems = this.gems;
 
         for (var y = 0; y < rows; y++) {
-            mthis.gems[y] = [];
+            gems[y] = [];
 			for (var x = 0; x < cols; x++) {
-				mthis.gems[y][x] = new Gem({
-					superview: mthis, 
+				gems[y][x] = new Gem({
+					superview: this, 
                     width:cellWidth,
                     height:cellHeight,
                     x:cellWidth*x,
@@ -89,10 +91,10 @@ exports = Class(View, function(supr) {
 				});
 			}
         }
-        var gems = mthis.gems;
+        
         for (var y = 0; y < rows; y++) {
 			for (var x = 0; x < cols; x++) {
-                var gem = gems[y][x];
+                gem = gems[y][x];
                 gem.setNearItems({
                     left: x > 0 ? gems[y][x-1] : null,
                     right: x < cols-1 ? gems[y][x+1] : null,
@@ -103,51 +105,52 @@ exports = Class(View, function(supr) {
         }
     }
 
+    this.resetBoard = function()
+    {
+        var gems = this.gems;
+        for (var y = 0; y < rows; y++) {
+			for (var x = 0; x < cols; x++) {
+                gem = gems[y][x];
+                gem.setType(Math.floor(Math.random() * 5) + 1  );
+                gem.updateMatches();
+                while(gem.isMatches())
+                {
+                    gem.setType(Math.floor(Math.random() * 5) + 1  );
+                    gem.updateMatches();
+                }
+			}
+        }
+    }
+
     this.handleSwap = function()
     {
-        if(this.selected_gem && this.swap_direction)
+        var selected_gem = this.selected_gem;
+        var swap_direction = this.swap_direction;
+        if(selected_gem && swap_direction)
         {
-            var swapTo = this.selected_gem.getNearItem(this.swap_direction);
-            if(swapTo)
+            var swap_gem = selected_gem.getNearItem(swap_direction);
+            if(swap_gem)
             {
-                this.selected_gem.swap(swapTo,this.swap_direction);            
+                var mthis = this;
+                selected_gem.swap(swap_gem).then(function(){
+                    if(!selected_gem.isMatches() && !swap_gem.isMatches())
+                    {
+                        selected_gem.swap(swap_gem, true);
+                    }
+                    selected_gem.isMatches() && mthis.handleMatches(selected_gem);
+                    swap_gem.isMatches() && mthis.handleMatches(swap_gem);
+                });
             }
             this.selected_gem = null;
             this.swap_direction = null;
         }
     }
 
-    this.getMatches = function(gem, direction)
-    {
-        var result = [gem];
-        var tmp = gem.getNearItem(direction);
-        while(tmp && tmp.getType() == gem.type())
-        {
-            result.push(tmp);
-            tmp = tmp.getNearItem(direction);
-        }
-        return result;
-    }
-
-    this.getMatchesAll = function(gem)
-    {
-        var hItems = this.getMatches(gem,"left").concat(this.getMatches(gem,"right"));
-        var vItems = this.getMatches(gem,"up").concat(this.getMatches(gem,"down"));
-        if(hItems.length >=3 )
-        {
-            this.fireItems(hItems);
-        }
-        if(vItems.length >=3 )
-        {
-            this.fireItems(vItems);
-        }
-    }
-
-    this.fireItems = function(items)
+    this.handleMatches = function(gem)
     {
         
     }
-
+   
     this.tick = function(dt)
     {
         this.handleSwap();

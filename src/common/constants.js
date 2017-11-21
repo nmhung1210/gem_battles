@@ -1,1 +1,0 @@
-exports.SWIPE_GEM_MAGNITUDE = 25;

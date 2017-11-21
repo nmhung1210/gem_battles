@@ -1,74 +1,31 @@
 import ui.View;
 import ui.TextView as TextView;
 import ui.ImageScaleView as ImageScaleView;
-import ui.ImageView;
-import ui.resource.loader as Loader;
 import ui.widget.ButtonView as ButtonView;
-import ui.SpriteView as SpriteView;
+import src.common.define as DEF;
 
-exports = Class(ui.View, function(supr) {
+exports = Class(ImageScaleView, function(supr) {
     
     this.init = function(opts)
     {
+        var app = opts.app;
+        var screenWidth = app.screenWidth();
+        var screenHeight = app.screenHeight();
         opts = merge(opts, {
             scaleMethod: 'cover',
-            x: 0,
-            y: 0,
-                        
-        });
-        
-        supr(this, 'init', [opts]);                
-        var view = this;
-        this.app = opts.app;
-        this.rootView = opts.rootView;
-        this.startLoader();
-    };       
-
-    this.startLoader = function()
-    {
-        var mthis = this;
-        this.showLoading();
-        Loader.preload(['resources/images/', 'resources/sound'], function() {
-            mthis.hideLoading();
-            mthis.initUI();
-        }); 
-    }
-    
-    this.showLoading = function()
-    {
-        var screenWidth = this.app.screenWidth();
-        var screenHeight = this.app.screenHeight();
-        this._loadingView = this._loadingView || new LoadingAnimation({
-            superview: this,
-            x: (screenWidth / 2 - 64),
-            y: (screenHeight / 2 - 64),
-            width: 128,
-            height: 128,            
-        });
-        this._loadingView.show();
-    }
-
-    this.hideLoading = function()
-    {
-        this._loadingView && this._loadingView.hide();
-    }
-    
-    this.initUI = function() {
-        var screenWidth = this.app.screenWidth();
-        var screenHeight = this.app.screenHeight();
-        var mthis = this;
-
-        var bg = new ImageScaleView({
-            superview: this,
-			scaleMethod: 'cover',
 			layout: 'box',
 			layoutWidth: '100%',
 			layoutHeight: '100%',
             centerX: true,
-            image:"resources/splash/splash.jpg"
+            image:"resources/splash/splash.jpg",
+            x:0,
+            y:0
         });
-
-        var text = new TextView({
+        supr(this, 'init', [opts]);      
+        
+        var mthis = this;
+        
+        new TextView({
             superview: this,
             x: (screenWidth / 2) - 200,
             y: (screenHeight / 2) - 200,
@@ -81,7 +38,7 @@ exports = Class(ui.View, function(supr) {
             shadowWidth: 4
         });
 
-        var startButton = new ButtonView({
+        new ButtonView({
             superview: this,
             x: screenWidth / 2 - 86,
             y: screenHeight / 2,
@@ -100,20 +57,10 @@ exports = Class(ui.View, function(supr) {
             },
             on: {
                 up: function() {                    
-                    mthis.emit("splashscreen:start");
+                    mthis.emit(DEF.EVENT_GAME_START);
                 }
             }
         });
-    }
+    };       
 });
 
-var LoadingAnimation = Class(SpriteView, function(supr) {
-    this.init = function(opts) {
-        opts = merge(opts, {
-            url: "resources/images/ui/loading/loading",
-            frameRate: 30
-        });
-        supr(this, 'init', [opts]);
-        this.startAnimation('anim', {loop: true});
-    }
-});

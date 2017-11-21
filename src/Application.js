@@ -2,10 +2,11 @@
 import device;
 import ui.StackView as StackView;
 import ui.TextView as TextView;
+import src.screens.LoadingScreen as LoadingScreen;
 import src.screens.SplashScreen as SplashScreen;
-import src.screens.LevelSelect as LevelSelect;
+import src.screens.LevelSelectScreen as LevelSelect;
 import src.screens.GameScreen as GameScreen;
-
+import src.common.define as DEF;
 /* Your application inherits from GC.Application, which is
  * exported and instantiated when the game is run.
  */
@@ -19,7 +20,7 @@ exports = Class(GC.Application, function () {
 		
 		// iPhone 4 screen as base
 		this.scaleRatio = device.width / 480;      
-		var rootView = this.rootView = new StackView({
+		this.rootView = new StackView({
 			superview: this,
 			app:this,
 			x: 0,
@@ -30,33 +31,33 @@ exports = Class(GC.Application, function () {
 			scale: this.scaleRatio,
 		});
 
-		var splashScreen = new SplashScreen({
-			app:this,
-			rootView:rootView
-		});
-
-		var levelSelect = new LevelSelect({
-			app:this,
-			rootView:rootView
-		});
-
-		var gameScreen = new GameScreen({
-			app:this,
-			rootView:rootView
-		});
-
-		rootView.push(splashScreen);
-
-		splashScreen.on("splashscreen:start",function(){
-			rootView.push(levelSelect);
-		});
-
-		levelSelect.on("levelselect:start",function(level){
-			rootView.push(gameScreen);
-			gameScreen.startLevel(level);
-		});
+		this.screens = {
+			loading:new LoadingScreen({app:this}),
+			splash:new SplashScreen({app:this}),
+			levelSelect:new LevelSelect({app:this}),
+			game: new GameScreen({app:this})
+		};
 		
+		this.rootView.push(this.screens.loading);
+		this.handleScreenEvents();		
 	};
+
+	this.handleScreenEvents = function()
+	{
+		var mthis = this;
+		this.screens.loading.on(DEF.EVENT_LOADING_COMPLETE,function(){
+			mthis.rootView.push(mthis.screens.splash,true);
+		});
+
+		this.screens.splash.on(DEF.EVENT_GAME_START,function(){
+			mthis.rootView.push(mthis.screens.levelSelect);
+		});
+
+		this.screens.levelSelect.on(DEF.EVENT_LEVEL_SELECTED,function(level){
+			mthis.rootView.push(mthis.screens.game);
+			mthis.screens.game.startLevel(level);
+		});
+	}
 
 	this.screenWidth = function()
 	{
