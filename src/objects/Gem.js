@@ -60,11 +60,13 @@ exports = Class(ui.View, function(supr) {
         return this._type;
     }
 
-    this.getOrgPos = function()
+    this.getOrgPos = function(offsetCols, offsetRows)
     {
+        var col = this._col + (offsetCols || 0);
+        var row = this._row + (offsetRows || 0);
         return {
-            x:this._col * this.style.width,
-            y:this._row * this.style.height
+            x:col * this.style.width,
+            y:row * this.style.height
         }
     }
 
@@ -131,10 +133,29 @@ exports = Class(ui.View, function(supr) {
              });
     }
 
-    this.reset = function()
+    this.resetFired = function()
     {
         this._fired = false;
         this.style.opacity = 1;
+    }
+
+    this.fallDown = function(depth)
+    {
+        var pos1 = this.getOrgPos();
+        var pos2 = this.getOrgPos(0,-depth);
+        var mthis = this;
+        mthis.setLock(true);
+        return animate(this).clear()
+            .now(pos2,0)
+            .then(
+                pos1,
+                DEF.GEM_FALLING_TIME,
+                animate.easeOutBounce
+            ).then(function(){
+                mthis.updateNearMatches();
+                mthis.setLock(false);
+            }
+        );
     }
 
     this.isFired = function()

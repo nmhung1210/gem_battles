@@ -15,9 +15,9 @@ exports = Class(View, function(supr) {
         });
         supr(this, 'init', [opts]);
 
-        this.selected_gem = null;
-        this.swap_direction = null;
-        this.gems = [];
+        this._selected_gem = null;
+        this._swap_direction = null;
+        this._board = [];
         
         this.initBoard();
         this.handleInput();
@@ -27,7 +27,7 @@ exports = Class(View, function(supr) {
     this.handleInput = function()
     {
         var mthis = this;
-        var gems = this.gems;
+        var board = this._board;
         var startTouchPoint = null;
         var cellWidth = this._opts.cellWidth;
         var cellHeight = this._opts.cellHeight;
@@ -35,12 +35,12 @@ exports = Class(View, function(supr) {
         this.on('InputStart', function (event, point) {
             var row = Math.floor(point.y / cellHeight);
             var col = Math.floor(point.x / cellWidth);
-            mthis.selected_gem = gems[row] ? gems[row][col] ? gems[row][col] : null : null;
+            mthis._selected_gem = board[row] ? board[row][col] ? board[row][col] : null : null;
             startTouchPoint = point;
         });
         
         this.on('InputMove', function (event, point)  {
-            if(startTouchPoint && mthis.selected_gem)
+            if(startTouchPoint && mthis._selected_gem)
             {
                 var delta = new Vec2D({
                     x: point.x - startTouchPoint.x,
@@ -51,18 +51,18 @@ exports = Class(View, function(supr) {
                 {
                     if (Math.abs(delta.y) > Math.abs(delta.x))
                     {
-                        mthis.swap_direction = delta.y < 0 ? "up" : "down";
+                        mthis._swap_direction = delta.y < 0 ? "up" : "down";
                     }
                     else                        
                     {
-                        mthis.swap_direction = delta.x < 0 ? "left" : "right";
+                        mthis._swap_direction = delta.x < 0 ? "left" : "right";
                     }  
                 }
             }
         });
         this.on('InputOut', function (event, point) {
-            mthis.selected_gem = null;
-            mthis.swap_direction = null;
+            mthis._selected_gem = null;
+            mthis._swap_direction = null;
         });
     }
 
@@ -74,12 +74,12 @@ exports = Class(View, function(supr) {
         var rows = this._opts.rows;
         var cellWidth = this._opts.cellWidth;
         var cellHeight = this._opts.cellHeight;
-        var gems = this.gems;
+        var board = this._board;
 
         for (var y = 0; y < rows; y++) {
-            gems[y] = [];
+            board[y] = [];
 			for (var x = 0; x < cols; x++) {
-				gems[y][x] = new Gem({
+				board[y][x] = new Gem({
 					superview: this, 
                     width:cellWidth,
                     height:cellHeight,
@@ -94,58 +94,63 @@ exports = Class(View, function(supr) {
         
         for (var y = 0; y < rows; y++) {
 			for (var x = 0; x < cols; x++) {
-                gem = gems[y][x];
+                gem = board[y][x];
                 gem.setNearItems({
-                    left: x > 0 ? gems[y][x-1] : null,
-                    right: x < cols-1 ? gems[y][x+1] : null,
-                    up: y > 0 ? gems[y-1][x] : null,
-                    down: y < rows-1 ? gems[y+1][x] : null,
+                    left: x > 0 ? board[y][x-1] : null,
+                    right: x < cols-1 ? board[y][x+1] : null,
+                    up: y > 0 ? board[y-1][x] : null,
+                    down: y < rows-1 ? board[y+1][x] : null,
                 });
 			}
         }
         this.resetBoard();
     }
 
+    this.resetType = function(gem)
+    {
+        gem.setType(Math.floor(Math.random() * 5) + 1  );
+        gem.updateNearMatches();
+        while(gem.isMatches())
+        {
+            gem.setType(Math.floor(Math.random() * 5) + 1  );
+            gem.updateNearMatches();
+        }
+    }
+
     this.resetBoard = function()
     {
         var cols  = this._opts.cols;
         var rows = this._opts.rows;
-        var gems = this.gems;
+        var board = this._board;
         for (var y = 0; y < rows; y++) {
 			for (var x = 0; x < cols; x++) {
-                gem = gems[y][x];
-                gem.setType(Math.floor(Math.random() * 5) + 1  );
-                gem.updateNearMatches();
-                while(gem.isMatches())
-                {
-                    gem.setType(Math.floor(Math.random() * 5) + 1  );
-                    gem.updateNearMatches();
-                }
+                var gem = board[y][x];
+                this.resetType(gem);       
 			}
         }
     }
 
     this.handleSwap = function()
     {
-        var selected_gem = this.selected_gem;
-        var swap_direction = this.swap_direction;
-        if(selected_gem && !selected_gem.isLocked() && swap_direction)
+        var _selected_gem = this._selected_gem;
+        var _swap_direction = this._swap_direction;
+        if(_selected_gem && !_selected_gem.isLocked() && _swap_direction)
         {
-            var swap_gem = selected_gem.getNearItem(swap_direction);
+            var swap_gem = _selected_gem.getNearItem(_swap_direction);
             if(swap_gem && !swap_gem.isLocked())
             {
                 var mthis = this;
-                selected_gem.swap(swap_gem).then(function(){
-                    if(!selected_gem.isMatches() && !swap_gem.isMatches())
+                _selected_gem.swap(swap_gem).then(function(){
+                    if(!_selected_gem.isMatches() && !swap_gem.isMatches())
                     {
-                        selected_gem.swap(swap_gem, true);
+                        _selected_gem.swap(swap_gem, true);
                     }
-                    selected_gem.isMatches() && mthis.handleMatches(selected_gem);
+                    _selected_gem.isMatches() && mthis.handleMatches(_selected_gem);
                     swap_gem.isMatches() && mthis.handleMatches(swap_gem);
                 });
             }
-            this.selected_gem = null;
-            this.swap_direction = null;
+            this._selected_gem = null;
+            this._swap_direction = null;
         }
     }
 
@@ -159,18 +164,49 @@ exports = Class(View, function(supr) {
             item.fired();
             fallCols[item._col] = (fallCols[item._col] || 0)+1;
         }
-        for(var col in fallCols)
-        {
-            this.fallColDown(col, fallCols[col]);
-        }                
+        setTimeout(function(mthis){
+            for(var col in fallCols)
+            {
+                mthis.fallColDown(col, fallCols[col]);
+            }                
+        },DEF.GEM_FIRING_TIME, this);
     }
 
     this.fallColDown = function(col, depth)
     {
         var cols  = this._opts.cols;
         var rows = this._opts.rows;
-        var gems = this.gems;
-
+        var board = this._board;
+        var uprest = false;
+        var mthis = this;
+        var gem = null;
+        for(var y=rows-1; y >= 0; y--)
+        {
+            gem = board[y][col];
+            if(gem.isFired()) break;
+        }
+        var row = gem._row;
+        for(var y=row; y>=0; y--)
+        {
+            gem = board[y][col];
+            if(y-depth >= 0)
+            {
+                var upgem = board[y-depth][col];
+                gem.setType(upgem.getType());
+            }else
+            {
+                this.resetType(gem);
+            }
+            gem.resetFired();
+            gem.fallDown(depth);
+        }
+        setTimeout(function(){
+            for(var y=0; y<rows; y++)
+            {
+                var gem = board[y][col];
+                gem.isMatches() && mthis.handleMatches(gem);
+            }            
+        },DEF.GEM_FALLING_TIME+50);
     }
    
     this.tick = function(dt)
