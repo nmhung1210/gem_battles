@@ -88,7 +88,7 @@ exports = Class(ui.View, function(supr) {
         var pos1 = this.getOrgPos();
         var pos2 = item.getOrgPos();
         animate(this).clear()
-            .now(pos1)
+            .now(pos1,0)
             .then(
                 pos2,
                 DEF.GEM_SWAP_TIME,
@@ -96,7 +96,7 @@ exports = Class(ui.View, function(supr) {
             ).then(pos1,0);
 
         return animate(item).clear()
-                .now(pos2)
+                .now(pos2,0)
                 .then(
                     pos1,
                     DEF.GEM_SWAP_TIME,
