@@ -2,6 +2,8 @@ import ui.View;
 import ui.ImageScaleView as ImageScaleView;
 import animate;
 import src.common.define as DEF;
+import ui.ParticleEngine as ParticleEngine;
+
 
 exports = Class(ui.View, function(supr) {
     
@@ -17,6 +19,7 @@ exports = Class(ui.View, function(supr) {
             up:null,
             down:null
         };
+        this._potentialMatches = [];
         this._nearMatches = [];
         this._horizonalMatches = [];
         this._verticalMatches = [];
@@ -136,7 +139,7 @@ exports = Class(ui.View, function(supr) {
     this.resetFired = function()
     {
         this._fired = false;
-        this.style.opacity = 1;
+        this.style.opacity = 1.0;
     }
 
     this.fallDown = function(depth)
@@ -197,6 +200,56 @@ exports = Class(ui.View, function(supr) {
         this._verticalMatches = [];
     }
 
+    this.oppositeDirection = function(dir)
+    {
+        switch(dir)
+        {
+            case "left":
+                return "right";
+            case "right":
+                return "left";
+            case "up":
+                return "down";
+            case "down":
+                return "up";
+        }
+        return false;
+    }
+
+    this.updatePotentialMatches = function()
+    {
+        this._potentialMatches = [];
+        for(var i=0; i < DEF.DIRECTIONS.length; i++)
+        {
+            var dir = DEF.DIRECTIONS[i];
+            if(this.findMatches(dir).length)
+            {
+                var swapItem = this.getNearItem(this.oppositeDirection(dir));
+                if(swapItem)
+                {
+                    for(var j=0; j < DEF.DIRECTIONS.length; j++)
+                    {
+                        var sdir = DEF.DIRECTIONS[j];
+                        var candidate = swapItem.getNearItem(sdir);
+                        if(candidate && candidate !== this && candidate.getType() == this.getType())
+                        {
+                            this._potentialMatches.push([swapItem,candidate,sdir]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    this.getPotentialMatches = function()
+    {
+        return this._potentialMatches;
+    }
+
+    this.isPotentialMatches = function()
+    {
+        return this._potentialMatches.length;
+    }
 
     this.updateNearMatches = function()
     {
@@ -204,7 +257,6 @@ exports = Class(ui.View, function(supr) {
         var hItems = [].concat(this.findMatches("left"),this.findMatches("right"));
         var vItems = [].concat(this.findMatches("up"), this.findMatches("down"));
         var matches = [];
-        
         if(hItems.length >=2 )
         {
             matches = matches.concat(hItems);

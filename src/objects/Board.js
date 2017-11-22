@@ -2,7 +2,7 @@ import ui.View as View;
 import src.objects.Gem as Gem;
 import math.geom.Vec2D as Vec2D;
 import src.common.define as DEF;
-
+import ui.ParticleEngine as ParticleEngine;
 
 
 exports = Class(View, function(supr) {
@@ -18,11 +18,23 @@ exports = Class(View, function(supr) {
         this._selected_gem = null;
         this._swap_direction = null;
         this._board = [];
+        this._gems = [];
         
         this.initBoard();
         this.handleInput();
-       
+        this.initParticle();    
     };     
+
+    this.initParticle = function()
+    {
+        this._pEngine = new ParticleEngine({
+            superview: this,
+            width: this._opts.cellWidth,
+            height: this._opts.cellHeight,
+            initCount: this._opts.cols * this._opts.rows
+          });
+        //this._pEngine.emitParticles(this._gems);
+    }
 
     this.handleInput = function()
     {
@@ -88,7 +100,8 @@ exports = Class(View, function(supr) {
                     col:x,
                     row:y,
                     type: Math.floor(Math.random() * 5) + 1  
-				});
+                });
+                this._gems.push(board[y][x]);
 			}
         }
         
@@ -125,7 +138,8 @@ exports = Class(View, function(supr) {
         for (var y = 0; y < rows; y++) {
 			for (var x = 0; x < cols; x++) {
                 var gem = board[y][x];
-                this.resetGemType(gem);       
+                this.resetGemType(gem);    
+                gem.resetFired();   
 			}
         }
     }
@@ -215,11 +229,68 @@ exports = Class(View, function(supr) {
 
     this.checkPotentialMatches = function()
     {
-        
+        for(var i=0; i<this._gems.length; i++)
+        {
+            var gem = this._gems[i];
+            if(gem.isLocked())
+            {
+                return true;
+            }
+        }
+
+        for(var i=0; i<this._gems.length; i++)
+        {
+            var gem = this._gems[i];
+            gem.updatePotentialMatches();
+            if(gem.isPotentialMatches())
+            {
+                return true;
+            }            
+        }
+        //no more matches. Try to reset the board
+        for(var i=0; i<this._gems.length; i++)
+        {
+            var gem = this._gems[i];
+            gem.fired();
+        }
+        setTimeout(function(mthis){
+            mthis.resetBoard();             
+        },DEF.GEM_FIRING_TIME + 50, this);
+    }
+
+    this.autoPlay = function()
+    {
+        for(var i=0; i<this._gems.length; i++)
+        {
+            var gem = this._gems[i];
+            if(gem.isLocked())
+            {
+                setTimeout(function(mthis){
+                    mthis.autoPlay();             
+                },DEF.GEM_FIRING_TIME + DEF.GEM_FALLING_TIME+200 , this);
+                return false;
+            }
+        }
+        for(var i=0; i<this._gems.length; i++)
+        {
+            var gem = this._gems[i];
+            if(gem.isPotentialMatches())
+            {
+                var pMatches = gem.getPotentialMatches();
+                this._selected_gem = pMatches[0][0];
+                this._swap_direction = pMatches[0][2];
+                break;
+            }
+        }
+        setTimeout(function(mthis){
+            mthis.autoPlay();             
+        },DEF.GEM_FIRING_TIME + DEF.GEM_FALLING_TIME+200 , this);
     }
    
     this.tick = function(dt)
     {
         this.handleSwap();
+        this._pEngine.runTick(dt);
+        this.checkPotentialMatches();
     }
 });

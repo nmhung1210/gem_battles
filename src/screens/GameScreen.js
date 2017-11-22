@@ -36,7 +36,7 @@ exports = Class(ui.View, function(supr) {
 		});
 		
 
-		var board = new Board({
+		this._board = new Board({
 			superview: mainFrame,
             x: 30,
 			y: 320,
@@ -53,5 +53,6 @@ exports = Class(ui.View, function(supr) {
 	this.startLevel = function(level)
 	{
 		console.log(level);
+		this._board.autoPlay();
 	}
 });
