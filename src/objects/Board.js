@@ -106,7 +106,7 @@ exports = Class(View, function(supr) {
         this.resetBoard();
     }
 
-    this.resetType = function(gem)
+    this.resetGemType = function(gem)
     {
         gem.setType(Math.floor(Math.random() * 5) + 1  );
         gem.updateNearMatches();
@@ -125,27 +125,27 @@ exports = Class(View, function(supr) {
         for (var y = 0; y < rows; y++) {
 			for (var x = 0; x < cols; x++) {
                 var gem = board[y][x];
-                this.resetType(gem);       
+                this.resetGemType(gem);       
 			}
         }
     }
 
     this.handleSwap = function()
     {
-        var _selected_gem = this._selected_gem;
-        var _swap_direction = this._swap_direction;
-        if(_selected_gem && !_selected_gem.isLocked() && _swap_direction)
+        var selected_gem = this._selected_gem;
+        var swap_direction = this._swap_direction;
+        if(selected_gem && !selected_gem.isLocked() && swap_direction)
         {
-            var swap_gem = _selected_gem.getNearItem(_swap_direction);
+            var swap_gem = selected_gem.getNearItem(swap_direction);
             if(swap_gem && !swap_gem.isLocked())
             {
                 var mthis = this;
-                _selected_gem.swap(swap_gem).then(function(){
-                    if(!_selected_gem.isMatches() && !swap_gem.isMatches())
+                selected_gem.swap(swap_gem).then(function(){
+                    if(!selected_gem.isMatches() && !swap_gem.isMatches())
                     {
-                        _selected_gem.swap(swap_gem, true);
+                        selected_gem.swap(swap_gem, true);
                     }
-                    _selected_gem.isMatches() && mthis.handleMatches(_selected_gem);
+                    selected_gem.isMatches() && mthis.handleMatches(selected_gem);
                     swap_gem.isMatches() && mthis.handleMatches(swap_gem);
                 });
             }
@@ -185,6 +185,8 @@ exports = Class(View, function(supr) {
             gem = board[y][col];
             if(gem.isFired()) break;
         }
+
+        //swap down all type of fired gems
         var row = gem._row;
         for(var y=row; y>=0; y--)
         {
@@ -195,11 +197,13 @@ exports = Class(View, function(supr) {
                 gem.setType(upgem.getType());
             }else
             {
-                this.resetType(gem);
+                this.resetGemType(gem);
             }
             gem.resetFired();
             gem.fallDown(depth);
         }
+
+        //recheck if have the next matches
         setTimeout(function(){
             for(var y=0; y<rows; y++)
             {
@@ -207,6 +211,11 @@ exports = Class(View, function(supr) {
                 gem.isMatches() && mthis.handleMatches(gem);
             }            
         },DEF.GEM_FALLING_TIME+50);
+    }
+
+    this.checkPotentialMatches = function()
+    {
+        
     }
    
     this.tick = function(dt)
