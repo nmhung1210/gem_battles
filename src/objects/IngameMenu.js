@@ -57,6 +57,7 @@ exports = Class(ui.View, function(supr) {
             on: {
                 up: function() {                
                     SoundMgr.getSound().play("move");    
+                    SoundMgr.getSound().stop("background");
                     mthis.emit(DEF.EVENT_MENU_BACK);
                 }
             }
