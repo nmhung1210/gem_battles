@@ -1,14 +1,12 @@
 import ui.View;
 import ui.ImageScaleView as ImageScaleView;
-import ui.ImageView as ImageView;
-import ui.widget.ButtonView as ButtonView;
-import ui.ScrollView as ScrollView;
-import ui.resource.Image as Image;
-import ui.widget.ButtonView as ButtonView;
 
 import event.input.drag as drag;
 import src.objects.Gem as Gem;
 import src.objects.Board as Board;
+import src.objects.IngameMenu as IngameMenu;
+
+import src.sounds.SoundManager as SoundMgr;
 
 import src.common.define as DEF;
 
@@ -34,7 +32,16 @@ exports = Class(ui.View, function(supr) {
 			renderCenter:true,
             image: "resources/images/ui/background.png"
 		});
+
 		
+
+		var ingameMenu = new IngameMenu({
+			superview:mainFrame,
+			x:0,
+			y:0,
+			width: 576,
+			height: 1024
+		});
 
 		this._board = new Board({
 			superview: mainFrame,
@@ -48,11 +55,18 @@ exports = Class(ui.View, function(supr) {
 
 		
 
+		ingameMenu.on(DEF.EVENT_MENU_BACK,function(){
+			mthis.emit(DEF.EVENT_MENU_BACK);
+		});
+
+		ingameMenu.on(DEF.EVENT_MENU_RESET,function(){
+			mthis._board.resetBoard();
+		});
 	};     
 	
 	this.startLevel = function(level)
 	{
-		console.log(level);
-		this._board.autoPlay();
+		this._board.resetBoard();
+		SoundMgr.getSound().play("background");
 	}
 });

@@ -5,6 +5,7 @@ import ui.ScrollView as ScrollView;
 import ui.resource.Image as Image;
 import ui.widget.ButtonView as ButtonView;
 import src.common.define as DEF;
+import src.sounds.SoundManager as SoundMgr;
 
 var LevelPossitions = [
     [86,1600],
@@ -66,7 +67,7 @@ exports = Class(ui.View, function(supr) {
                 y: LevelPossitions[i][1],
                 title: i+1,
                 on: {
-                    up: startLevel.bind(this)
+                    up: startLevel.bind(this,i)
                 }
             });
         }
@@ -74,6 +75,7 @@ exports = Class(ui.View, function(supr) {
 
     var startLevel = function(level)
     {
+        SoundMgr.getSound().play("move"); 
         this.emit(DEF.EVENT_LEVEL_SELECTED,level);
     }
 });

@@ -8,3 +8,6 @@ exports.DIRECTIONS = ["left","right","up","down"];
 exports.EVENT_LOADING_COMPLETE = "loading_complete";
 exports.EVENT_GAME_START = "gamestart";
 exports.EVENT_LEVEL_SELECTED = "levelselected";
+
+exports.EVENT_MENU_RESET = "menureset";
+exports.EVENT_MENU_BACK = "menuback";

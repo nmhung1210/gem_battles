@@ -3,6 +3,7 @@ import ui.TextView as TextView;
 import ui.ImageScaleView as ImageScaleView;
 import ui.widget.ButtonView as ButtonView;
 import src.common.define as DEF;
+import src.sounds.SoundManager as SoundMgr;
 
 exports = Class(ImageScaleView, function(supr) {
     
@@ -56,7 +57,8 @@ exports = Class(ImageScaleView, function(supr) {
                 shadowColor: "#111111",
             },
             on: {
-                up: function() {                    
+                up: function() {                
+                    SoundMgr.getSound().play("move");    
                     mthis.emit(DEF.EVENT_GAME_START);
                 }
             }

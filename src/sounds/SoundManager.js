@@ -6,21 +6,35 @@ exports.sound = null;
  */
 exports.getSound = function () {
   if (!exports.sound) {
-    exports.sound = new AudioManager({
-      path: 'resources/sounds',
+    var sound = new AudioManager({
+      path: 'resources/audio',
       files: {
-        levelmusic: {
-          path: 'music',
+        background: {
           volume: 0.5,
           background: true,
           loop: true
         },
-        whack: {
-          path: 'effect',
+        win: {
           background: false
         }
       }
     });
+    sound.addSound('lose', {
+      path: 'effects',
+      background: false
+    });
+    sound.addSound('move', {
+      path: 'effects',
+      background: false
+    });
+    for(var i=1; i<=8; i++)
+    {
+      sound.addSound('star'+i, {
+        path: 'effects',
+        background: false
+      });
+    }
+    exports.sound = sound;
   }
   return exports.sound;
 };

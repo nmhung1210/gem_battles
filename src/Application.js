@@ -57,6 +57,10 @@ exports = Class(GC.Application, function () {
 			mthis.rootView.push(mthis.screens.game);
 			mthis.screens.game.startLevel(level);
 		});
+
+		this.screens.game.on(DEF.EVENT_MENU_BACK,function(level){
+			mthis.rootView.pop();
+		});
 	}
 
 	this.screenWidth = function()

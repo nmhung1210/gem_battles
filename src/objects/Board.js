@@ -3,7 +3,7 @@ import src.objects.Gem as Gem;
 import math.geom.Vec2D as Vec2D;
 import src.common.define as DEF;
 import ui.ParticleEngine as ParticleEngine;
-
+import src.sounds.SoundManager as SoundMgr;
 
 exports = Class(View, function(supr) {
     
@@ -116,7 +116,6 @@ exports = Class(View, function(supr) {
                 });
 			}
         }
-        this.resetBoard();
     }
 
     this.resetGemType = function(gem)
@@ -154,9 +153,11 @@ exports = Class(View, function(supr) {
             if(swap_gem && !swap_gem.isLocked())
             {
                 var mthis = this;
+                SoundMgr.getSound().play("move");
                 selected_gem.swap(swap_gem).then(function(){
                     if(!selected_gem.isMatches() && !swap_gem.isMatches())
                     {
+                        SoundMgr.getSound().play("lose");
                         selected_gem.swap(swap_gem, true);
                     }
                     selected_gem.isMatches() && mthis.handleMatches(selected_gem);
@@ -175,6 +176,7 @@ exports = Class(View, function(supr) {
         for(var i=0; i< matches.length; i++)
         {
             var item = matches[i];
+            SoundMgr.getSound().play("star"+(i+1));
             item.fired();
             fallCols[item._col] = (fallCols[item._col] || 0)+1;
         }

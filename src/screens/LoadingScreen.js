@@ -25,7 +25,7 @@ exports = Class(View, function(supr) {
         var mthis = this;
         Loader.preload([
             'resources/images/', 
-            'resources/sound'
+            'resources/audio'
         ], function() {
             mthis.emit(DEF.EVENT_LOADING_COMPLETE);
         }); 
