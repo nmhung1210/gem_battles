@@ -5,6 +5,8 @@ import src.common.define as DEF;
 import ui.ParticleEngine as ParticleEngine;
 import src.sounds.SoundManager as SoundMgr;
 
+import src.particles.Flame as Flame;
+
 exports = Class(View, function(supr) {
     
     this.init = function(opts)
@@ -19,22 +21,11 @@ exports = Class(View, function(supr) {
         this._swap_direction = null;
         this._board = [];
         this._gems = [];
+        this._showHintTime = 0;
         
         this.initBoard();
         this.handleInput();
-        this.initParticle();    
     };     
-
-    this.initParticle = function()
-    {
-        this._pEngine = new ParticleEngine({
-            superview: this,
-            width: this._opts.cellWidth,
-            height: this._opts.cellHeight,
-            initCount: this._opts.cols * this._opts.rows
-          });
-        //this._pEngine.emitParticles(this._gems);
-    }
 
     this.handleInput = function()
     {
@@ -141,6 +132,7 @@ exports = Class(View, function(supr) {
                 gem.resetFired();   
 			}
         }
+        this.resetHintTime();
     }
 
     this.handleSwap = function()
@@ -149,6 +141,7 @@ exports = Class(View, function(supr) {
         var swap_direction = this._swap_direction;
         if(selected_gem && !selected_gem.isLocked() && swap_direction)
         {
+            this.resetHintTime();
             var swap_gem = selected_gem.getNearItem(swap_direction);
             if(swap_gem && !swap_gem.isLocked())
             {
@@ -219,6 +212,10 @@ exports = Class(View, function(supr) {
             gem.fallDown(depth);
         }
 
+        setTimeout(function(){
+            SoundMgr.getSound().play("move");
+        },DEF.GEM_FALLING_TIME*0.35);
+
         //recheck if have the next matches
         setTimeout(function(){
             for(var y=0; y<rows; y++)
@@ -226,7 +223,7 @@ exports = Class(View, function(supr) {
                 var gem = board[y][col];
                 gem.isMatches() && mthis.handleMatches(gem);
             }            
-        },DEF.GEM_FALLING_TIME+50);
+        },DEF.GEM_FALLING_TIME+1);
     }
 
     this.checkPotentialMatches = function()
@@ -257,7 +254,7 @@ exports = Class(View, function(supr) {
         }
         setTimeout(function(mthis){
             mthis.resetBoard();             
-        },DEF.GEM_FIRING_TIME + 50, this);
+        },DEF.GEM_FIRING_TIME + DEF.GEM_FALLING_TIME + 50, this);
     }
 
     this.autoPlay = function()
@@ -288,11 +285,40 @@ exports = Class(View, function(supr) {
             mthis.autoPlay();             
         },DEF.GEM_FIRING_TIME + DEF.GEM_FALLING_TIME+200 , this);
     }
+
+    this.isNeedHint = function()
+    {
+        return this._showHintTime < Date.now();
+    }
+
+    this.resetHintTime = function()
+    {
+        this._showHintTime = Date.now() + DEF.SHOW_HINT_TIMEOUT;
+    }
+
+    this.updateHint = function()
+    {
+        if(this.isNeedHint())
+        {
+            for(var i=0; i<this._gems.length; i++)
+            {
+                var gem = this._gems[i];
+                if(gem.isPotentialMatches())
+                {
+                    this.resetHintTime();
+                    var potentials = gem.getPotentialMatches();
+                    potentials[0][0].showHint();
+                    potentials[0][1].showHint();
+                    return true;
+                }            
+            }
+        }
+    }
    
     this.tick = function(dt)
     {
         this.handleSwap();
-        this._pEngine.runTick(dt);
         this.checkPotentialMatches();
+        this.updateHint();
     }
 });

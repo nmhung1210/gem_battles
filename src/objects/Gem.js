@@ -3,7 +3,7 @@ import ui.ImageScaleView as ImageScaleView;
 import animate;
 import src.common.define as DEF;
 import ui.ParticleEngine as ParticleEngine;
-
+import src.particles.Flame as Flame;
 
 exports = Class(ui.View, function(supr) {
     
@@ -19,6 +19,7 @@ exports = Class(ui.View, function(supr) {
             up:null,
             down:null
         };
+        this._lock = 0;
         this._potentialMatches = [];
         this._nearMatches = [];
         this._horizonalMatches = [];
@@ -38,6 +39,15 @@ exports = Class(ui.View, function(supr) {
 			renderCenter:true,
 			scaleMethod:"contain"
         });
+
+        this._flame = new Flame({
+			superview: opts.superview,
+			x: opts.x+opts.width/4,
+			y: opts.y,
+			width: opts.width/2,
+			height: opts.height
+        });
+
         this.setType(this._type);
     };     
 
@@ -73,24 +83,37 @@ exports = Class(ui.View, function(supr) {
         }
     }
 
-    this.setLock = function(lock)
+    this.setLockTime = function(dur)
     {
-        this._lock = lock;
+        this.setLock(true);
+        setTimeout(function(mthis){
+            mthis.setLock(false);
+        },dur,this);
+    }
+
+    this.setLock = function(lock, zone)
+    {
+        this._lock += lock ? 1 : -1;
+        console.log("setLock ("+lock+") "+this._row+","+this._col+" => "+this._lock+" zone="+zone);
     }
 
     this.isLocked = function()
     {
-        return this._lock;
+        if(this._lock < 0)
+        {
+            console.warn("The Gem's lock is negative. Please double check your logic!");
+        }
+        return this._lock > 0;
     }
 
     this.swap = function(item, force)
     {
-        this.setLock(true);
-        item.setLock(true);
+        this.setLockTime(DEF.GEM_SWAP_TIME);
+        item.setLockTime(DEF.GEM_SWAP_TIME);
         var mthis = this;
         var pos1 = this.getOrgPos();
         var pos2 = item.getOrgPos();
-        animate(this).clear()
+        animate(this)
             .now(pos1,0)
             .then(
                 pos2,
@@ -98,7 +121,7 @@ exports = Class(ui.View, function(supr) {
                 animate.linear
             ).then(pos1,0);
 
-        return animate(item).clear()
+        return animate(item)
                 .now(pos2,0)
                 .then(
                     pos1,
@@ -117,8 +140,6 @@ exports = Class(ui.View, function(supr) {
                         mthis.resetNearMatches();
                         item.resetNearMatches();
                     }
-                    mthis.setLock(false);
-                    item.setLock(false);
                 }
             );
     }
@@ -126,14 +147,21 @@ exports = Class(ui.View, function(supr) {
     this.fired = function()
     {
         var mthis = this;
-        this.setLock(true);
+        this.setLockTime(DEF.GEM_FIRING_TIME+1);
         this._fired = true;
-        return animate(this).clear()
+        return animate(this)
              .now({opacity:0},DEF.GEM_FIRING_TIME*0.35)
              .then({opacity:0.9},DEF.GEM_FIRING_TIME*0.35)
-             .then({opacity:0},DEF.GEM_FIRING_TIME*0.4).then(function(){
-                mthis.setLock(false);
-             });
+             .then({opacity:0},DEF.GEM_FIRING_TIME*0.3);
+    }
+
+    this.tick = function(dt)
+    {
+        if(this.isFired())
+        {
+            this._flame.emitFlameParticles();
+        }
+        this._flame.runTick(dt);
     }
 
     this.resetFired = function()
@@ -147,8 +175,8 @@ exports = Class(ui.View, function(supr) {
         var pos1 = this.getOrgPos();
         var pos2 = this.getOrgPos(0,-depth);
         var mthis = this;
-        mthis.setLock(true);
-        return animate(this).clear()
+        mthis.setLockTime(DEF.GEM_FALLING_TIME);
+        return animate(this)
             .now(pos2,0)
             .then(
                 pos1,
@@ -156,7 +184,6 @@ exports = Class(ui.View, function(supr) {
                 animate.easeOutBounce
             ).then(function(){
                 mthis.updateNearMatches();
-                mthis.setLock(false);
             }
         );
     }
@@ -282,6 +309,15 @@ exports = Class(ui.View, function(supr) {
             tmp = tmp.getNearItem(direction);
         }
         return result;
+    }
+
+    this.showHint = function()
+    {
+        return animate(this)
+            .now({opacity:0},100)
+            .then({opacity:1},100)
+            .then({opacity:0},100)
+            .then({opacity:1},100);
     }
 
     this.getNearMatches = function()

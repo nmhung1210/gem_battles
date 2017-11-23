@@ -7,7 +7,7 @@ import src.objects.Board as Board;
 import src.objects.IngameMenu as IngameMenu;
 
 import src.sounds.SoundManager as SoundMgr;
-
+import src.particles.Flame as Flame;
 import src.common.define as DEF;
 
 exports = Class(ui.View, function(supr) {
@@ -33,8 +33,6 @@ exports = Class(ui.View, function(supr) {
             image: "resources/images/ui/background.png"
 		});
 
-		
-
 		var ingameMenu = new IngameMenu({
 			superview:mainFrame,
 			x:0,
@@ -52,8 +50,6 @@ exports = Class(ui.View, function(supr) {
 			cols:5,
 			rows:5
 		});
-
-		
 
 		ingameMenu.on(DEF.EVENT_MENU_BACK,function(){
 			mthis.emit(DEF.EVENT_MENU_BACK);
