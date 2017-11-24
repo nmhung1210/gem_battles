@@ -15,7 +15,8 @@ exports.getSound = function () {
           loop: true
         },
         win: {
-          background: false
+          background: false,
+          loop: false
         }
       }
     });
@@ -38,3 +39,13 @@ exports.getSound = function () {
   }
   return exports.sound;
 };
+
+
+exports.stopAll = function()
+{
+  var soundMgr = exports.getSound();
+  for(var s in soundMgr._sounds)
+  {
+    soundMgr.stop(s);
+  }
+}

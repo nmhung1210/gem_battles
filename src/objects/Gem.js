@@ -94,7 +94,6 @@ exports = Class(ui.View, function(supr) {
     this.setLock = function(lock, zone)
     {
         this._lock += lock ? 1 : -1;
-        console.log("setLock ("+lock+") "+this._row+","+this._col+" => "+this._lock+" zone="+zone);
     }
 
     this.isLocked = function()
@@ -108,8 +107,8 @@ exports = Class(ui.View, function(supr) {
 
     this.swap = function(item, force)
     {
-        this.setLockTime(DEF.GEM_SWAP_TIME);
-        item.setLockTime(DEF.GEM_SWAP_TIME);
+        this.setLockTime(DEF.GEM_SWAP_TIME+10);
+        item.setLockTime(DEF.GEM_SWAP_TIME+10);
         var mthis = this;
         var pos1 = this.getOrgPos();
         var pos2 = item.getOrgPos();
@@ -147,7 +146,7 @@ exports = Class(ui.View, function(supr) {
     this.fired = function()
     {
         var mthis = this;
-        this.setLockTime(DEF.GEM_FIRING_TIME+1);
+        this.setLockTime(DEF.GEM_FIRING_TIME+10);
         this._fired = true;
         return animate(this)
              .now({opacity:0},DEF.GEM_FIRING_TIME*0.35)
@@ -175,7 +174,7 @@ exports = Class(ui.View, function(supr) {
         var pos1 = this.getOrgPos();
         var pos2 = this.getOrgPos(0,-depth);
         var mthis = this;
-        mthis.setLockTime(DEF.GEM_FALLING_TIME);
+        mthis.setLockTime(DEF.GEM_FALLING_TIME+10);
         return animate(this)
             .now(pos2,0)
             .then(

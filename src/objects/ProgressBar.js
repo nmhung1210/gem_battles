@@ -2,6 +2,7 @@ import ui.View as View;
 import src.common.define as DEF;
 import ui.ImageView as ImageView;
 import ui.ImageScaleView as ImageScaleView;
+import ui.TextView as TextView;
 
 exports = Class(View, function(supr) {
     
@@ -14,7 +15,6 @@ exports = Class(View, function(supr) {
         supr(this, 'init', [opts]);
         var width = opts.width;
         var height = opts.height;             
-        this._progress = opts.progress;
 
         var frame = new View({
             superview: this,
@@ -24,7 +24,6 @@ exports = Class(View, function(supr) {
             x: 12,
             clip:true
         });
-        
 
         new ImageView({
             superview: frame,
@@ -54,13 +53,36 @@ exports = Class(View, function(supr) {
             y: 0,
             x: 0
         });
+
+        this._text = new TextView({
+            superview: frame,
+            buffer: false,
+			autoFontSize: true,
+			x: 0,
+			y: 0,
+			width:width,
+            height:height,
+			size: height*0.8,
+			wrap: true,
+			color: "#FAFAFA",
+            outlineColor: "#000000",
+            text:""
+        }); 
     }
 
     this.setProgress = function(progress)
     {
-        this._progress = progress;
+        var width = this._opts.width;
+        progress = progress < 0 ? 0 : progress > 100 ? 100 : progress;
         this._bar.updateOpts({
-            width:width * progress / 100
+            x: width * progress / 100 - width,
+        });
+    }
+
+    this.setLabel = function(text)
+    {
+        this._text.updateOpts({
+            text:text
         });
     }
 });

@@ -3,6 +3,7 @@ exports.SWIPE_GEM_MAX_TIME = 125;
 exports.GEM_SWAP_TIME = 150;
 exports.GEM_FALLING_TIME = 600;
 exports.GEM_FIRING_TIME = 300;
+exports.GAMEOVER_ANIM_TIME = 5000;
 
 exports.GAME_DURATION = 60000;
 
@@ -15,5 +16,8 @@ exports.EVENT_SCORE = "levelselected";
 
 exports.EVENT_MENU_RESET = "menureset";
 exports.EVENT_MENU_BACK = "menuback";
+exports.EVENT_GAMEOVER = "EVENT_GAME_OVER";
+exports.EVENT_LEVELUP = "EVENT_LEVEL_UP";
 
 exports.SHOW_HINT_TIMEOUT = 5000;
+exports.LEVEL_SCORE_TARGET = 10;

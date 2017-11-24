@@ -33,7 +33,7 @@ exports = Class(ui.View, function(supr) {
             image: "resources/images/ui/background.png"
 		});
 
-		var ingameMenu = new IngameMenu({
+		this._ingameMenu = new IngameMenu({
 			superview:mainFrame,
 			x:0,
 			y:0,
@@ -51,18 +51,30 @@ exports = Class(ui.View, function(supr) {
 			rows:5
 		});
 
-		ingameMenu.on(DEF.EVENT_MENU_BACK,function(){
+		this._ingameMenu.on(DEF.EVENT_MENU_BACK,function(){
 			mthis.emit(DEF.EVENT_MENU_BACK);
 		});
 
-		ingameMenu.on(DEF.EVENT_MENU_RESET,function(){
+		this._ingameMenu.on(DEF.EVENT_MENU_RESET,function(){
 			mthis._board.resetBoard();
+		});
+
+		this._ingameMenu.on(DEF.EVENT_GAMEOVER,function(){
+			mthis.emit(DEF.EVENT_GAMEOVER);
+		});
+		this._ingameMenu.on(DEF.EVENT_LEVELUP,function(){
+			mthis.emit(DEF.EVENT_LEVELUP);
+		});
+
+		this._board.on(DEF.EVENT_SCORE,function(score){
+			mthis._ingameMenu.addScore(score);
 		});
 	};     
 	
 	this.startLevel = function(level)
 	{
-		this._board.resetBoard();
+		this._board.resetBoard(level);
+		this._ingameMenu.setLevel(level);
 		SoundMgr.getSound().play("background");
 	}
 });

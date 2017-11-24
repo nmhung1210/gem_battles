@@ -6,17 +6,22 @@ import ui.ImageView as ImageView;
 import ui.TextView as TextView;
 import ui.ScoreView as ScoreView;
 import src.objects.ProgressBar as ProgressBar;
+import animate;
 
 exports = Class(ui.View, function(supr) {
     
     this.init = function(opts)
     {
+        opts = merge(opts,{
+            level:1
+        });
         supr(this, 'init', [opts]);
         var width = opts.width;
         var height = opts.height;             
         var mthis = this;
         this._score = 0;
         this._timeout = DEF.GAME_DURATION;
+        this._targetScore = opts.level * 10;
 
         new ButtonView({
             superview: this,
@@ -93,13 +98,25 @@ exports = Class(ui.View, function(supr) {
 			verticalPadding: 5,
 			horizontalPadding: 20,
 			text: Math.floor(this._timeout / 1000).toString()
+        });
+        
+        this._notifyView = new TextView({
+            superview: imageview,
+			buffer: false,
+			autoFontSize: true,
+			x: 0,
+			y: 0,
+			height: height,
+			width: width,
+			size: 96,
+			wrap: true,
+			color: "#FAFAFA",
+			outlineColor: "#000000",
+			verticalPadding: 5,
+			horizontalPadding: 20,
 		});
 
-        this.scoreText = new TextView({
-            superview: this
-        }); 
-
-        new ProgressBar({
+        this._progress = new ProgressBar({
             superview: this,
 			x: width/2 - 200,
 			y: height-100,
@@ -108,17 +125,47 @@ exports = Class(ui.View, function(supr) {
             progress:50
         });
         
+        this.addScore(0);
     }
 
     this.addScore = function(score)
     {
         this._score += score;
+        this._progress.setLabel([this._score,this._targetScore].join(" / "));
+        this._progress.setProgress(this._score*100/(this._targetScore||1));
+    }
+
+    this.setLevel = function(level)
+    {
+        this._is_completed = false;
+        this._score = 0;
+        this._targetScore = (level + 1) * DEF.LEVEL_SCORE_TARGET;
+        this._timeout = DEF.GAME_DURATION;
+        this.addScore(0);
+    }
+    
+    this.checkComplete = function()
+    {
+        if(this._is_completed) return true;
+        if(this._timeout <= 0 && this._score < this._targetScore)
+        {
+            this._is_completed = true;
+            this.emit(DEF.EVENT_GAMEOVER);
+        }
+        if(this._score >= this._targetScore)
+        {
+            this._is_completed = true;
+            setTimeout(function(mthis){
+                mthis.emit(DEF.EVENT_LEVELUP);
+            },DEF.GEM_FALLING_TIME+DEF.GEM_FIRING_TIME,this);
+        }
     }
 
     this.tick = function(dt)
     {
         this._timeout -= dt;
         this._timeout = this._timeout < 0 ? 0 : this._timeout;
-        this._timeoutView.setText("00:"+Math.floor(this._timeout / 1000).toString());
+        this._timeoutView.setText("00:" + (Math.floor(this._timeout / 1000)+1000).toString().substr(2));
+        this.checkComplete();
     }
 });

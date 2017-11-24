@@ -12,5 +12,9 @@
   "supportedOrientations": [
     "portrait"
   ],
-  "title": "Gem's Battles"
+  "title": "Gem's Battles",
+  "splash": {
+    "autoHide": true,
+    "universal": "resources/splash/splash.jpg"
+  }
 }

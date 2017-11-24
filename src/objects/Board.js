@@ -22,6 +22,7 @@ exports = Class(View, function(supr) {
         this._board = [];
         this._gems = [];
         this._showHintTime = 0;
+        this._score_step = 0;
         
         this.initBoard();
         this.handleInput();
@@ -165,6 +166,7 @@ exports = Class(View, function(supr) {
     this.handleMatches = function(gem)
     {
         var matches = gem.getNearMatches();
+        this._score_step += matches.length+(matches.length-3)*matches.length;
         var fallCols = {};
         for(var i=0; i< matches.length; i++)
         {
@@ -314,11 +316,21 @@ exports = Class(View, function(supr) {
             }
         }
     }
+
+    this.updateScore = function()
+    {
+        if(this._score_step)
+        {
+            this.emit(DEF.EVENT_SCORE,this._score_step);
+            this._score_step = 0;
+        }
+    }
    
     this.tick = function(dt)
     {
         this.handleSwap();
         this.checkPotentialMatches();
         this.updateHint();
+        this.updateScore();
     }
 });

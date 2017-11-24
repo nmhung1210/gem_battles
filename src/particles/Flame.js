@@ -46,7 +46,7 @@ exports = Class(View, function(supr) {
 			var roll = Math.random();
 			if (roll < 0.8) {
 				var ttl = Math.random() * 1200 + 400;
-				var width = Math.random() * FLAME_WIDTH / 3 + 2 * FLAME_WIDTH / 3;
+				var width = Math.random() * FLAME_WIDTH + FLAME_WIDTH / 2;
 				var height = FLAME_HEIGHT * width / FLAME_WIDTH;
 
 				pObj.image = FLAMES[~~(Math.random() * FLAMES.length)];
@@ -57,9 +57,9 @@ exports = Class(View, function(supr) {
 				pObj.ay = height / 2;
 				pObj.width = width;
 				pObj.height = height;
-				pObj.dheight = pObj.ddheight = Math.random() * 150;
+				pObj.dheight = pObj.ddheight = Math.random() * 200;
 				pObj.dy = pObj.ddy = -pObj.dheight;
-				pObj.dscale = 0.1;
+				pObj.dscale = 0.2;
 				pObj.opacity = 0;
 				pObj.dopacity = 4000 / ttl;
 				pObj.ddopacity = -4 * pObj.dopacity;
