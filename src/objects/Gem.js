@@ -83,17 +83,10 @@ exports = Class(ui.View, function(supr) {
         }
     }
 
-    this.setLockTime = function(dur)
-    {
-        this.setLock(true);
-        setTimeout(function(mthis){
-            mthis.setLock(false);
-        },dur,this);
-    }
-
-    this.setLock = function(lock, zone)
+    this.setLock = function(lock,zone)
     {
         this._lock += lock ? 1 : -1;
+        // console.log("["+this._row+","+this._col+"]["+lock+"]["+zone+"] = "+this._lock);
     }
 
     this.isLocked = function()
@@ -107,13 +100,13 @@ exports = Class(ui.View, function(supr) {
 
     this.swap = function(item, force)
     {
-        this.setLockTime(DEF.GEM_SWAP_TIME+10);
-        item.setLockTime(DEF.GEM_SWAP_TIME+10);
+        this.setLock(true,"swap");
+        item.setLock(true,"swap");
         var mthis = this;
         var pos1 = this.getOrgPos();
         var pos2 = item.getOrgPos();
         animate(this)
-            .now(pos1,0)
+            .then(pos1,0)
             .then(
                 pos2,
                 DEF.GEM_SWAP_TIME,
@@ -121,13 +114,15 @@ exports = Class(ui.View, function(supr) {
             ).then(pos1,0);
 
         return animate(item)
-                .now(pos2,0)
+                .then(pos2,0)
                 .then(
                     pos1,
-                    DEF.GEM_SWAP_TIME,
+                    DEF.GEM_SWAP_TIME+1,
                     animate.linear
                 ).then(pos2,0)
                 .then(function(){
+                    mthis.setLock(false,"swap");
+                    item.setLock(false,"swap");
                     var mtype = mthis.getType();
                     mthis.setType(item.getType());
                     item.setType(mtype);
@@ -139,19 +134,22 @@ exports = Class(ui.View, function(supr) {
                         mthis.resetNearMatches();
                         item.resetNearMatches();
                     }
-                }
-            );
+                },0);
     }
 
     this.fired = function()
     {
+        if(this.isFired()) return
         var mthis = this;
-        this.setLockTime(DEF.GEM_FIRING_TIME+10);
         this._fired = true;
+        this.setLock(true,"fired");
         return animate(this)
-             .now({opacity:0},DEF.GEM_FIRING_TIME*0.35)
+             .then({opacity:0},DEF.GEM_FIRING_TIME*0.35)
              .then({opacity:0.9},DEF.GEM_FIRING_TIME*0.35)
-             .then({opacity:0},DEF.GEM_FIRING_TIME*0.3);
+             .then({opacity:0},DEF.GEM_FIRING_TIME*0.3)
+             .then(function(){
+                 mthis.setLock(false,"fired");
+             },0);
     }
 
     this.tick = function(dt)
@@ -166,7 +164,8 @@ exports = Class(ui.View, function(supr) {
     this.resetFired = function()
     {
         this._fired = false;
-        this.style.opacity = 1.0;
+        return animate(this)
+            .then({opacity:1.0},0);
     }
 
     this.fallDown = function(depth)
@@ -174,17 +173,17 @@ exports = Class(ui.View, function(supr) {
         var pos1 = this.getOrgPos();
         var pos2 = this.getOrgPos(0,-depth);
         var mthis = this;
-        mthis.setLockTime(DEF.GEM_FALLING_TIME+10);
+        mthis.setLock(true,"falldown");
         return animate(this)
-            .now(pos2,0)
+            .then(pos2,0)
             .then(
                 pos1,
                 DEF.GEM_FALLING_TIME,
                 animate.easeOutBounce
             ).then(function(){
+                mthis.setLock(false,"falldown");
                 mthis.updateNearMatches();
-            }
-        );
+            },0);
     }
 
     this.isFired = function()
@@ -313,7 +312,7 @@ exports = Class(ui.View, function(supr) {
     this.showHint = function()
     {
         return animate(this)
-            .now({opacity:0},100)
+            .then({opacity:0},100)
             .then({opacity:1},100)
             .then({opacity:0},100)
             .then({opacity:1},100);

@@ -26,6 +26,7 @@ exports = Class(View, function(supr) {
         
         this.initBoard();
         this.handleInput();
+        //this.autoPlay();
     };     
 
     this.handleInput = function()

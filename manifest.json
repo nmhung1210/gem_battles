@@ -16,5 +16,8 @@
   "splash": {
     "autoHide": true,
     "universal": "resources/splash/splash.jpg"
+  },
+  "android":{
+    
   }
 }
