@@ -155,6 +155,7 @@ exports = Class(View, function(supr) {
         for (var y = 0; y < rows; y++) {
 			for (var x = 0; x < cols; x++) {
                 var gem = board[y][x];
+                gem.resetLock();
                 gem.resetType(true);
                 gem.resetFired();   
 			}

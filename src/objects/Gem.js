@@ -61,15 +61,26 @@ exports = Class(ui.View, function(supr) {
     this.setLockTime = function(time)
     {
         this._lock++;
-        setTimeout(function(mthis){
+        this._lockPids = this._lockPids || [];
+        var pid = setTimeout(function(mthis){
             mthis._lock--;
         },time,this);
+        this._lockPids.push(pid);
         return this;
     }
 
     this.isLocked = function()
     {
         return this._lock > 0;
+    }
+
+    this.resetLock = function()
+    {
+        while(this._lockPids.length)
+        {
+            clearTimeout(this._lockPids.shift());
+        }
+        this._lock = 0;
     }
 
     this.resetType = function(check)
