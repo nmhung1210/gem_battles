@@ -2,8 +2,8 @@ import ui.View;
 import ui.TextView as TextView;
 import ui.ImageScaleView as ImageScaleView;
 import ui.widget.ButtonView as ButtonView;
-import src.common.define as DEF;
-import src.sounds.SoundManager as SoundMgr;
+import src.common.Define as DEF; 
+import src.sounds.SoundManager as SoundMgr; 
 
 exports = Class(ImageScaleView, function(supr) {
     

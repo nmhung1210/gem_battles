@@ -2,13 +2,15 @@ import ui.View;
 import ui.ImageScaleView as ImageScaleView;
 
 import event.input.drag as drag;
-import src.objects.Gem as Gem;
+import src.objects.Gem as Gem; 
 import src.objects.Board as Board;
 import src.objects.IngameMenu as IngameMenu;
 
 import src.sounds.SoundManager as SoundMgr;
 import src.particles.Flame as Flame;
-import src.common.define as DEF;
+import src.common.Define as DEF; 
+import src.characters.NinjaGirl as NinjaGirl;
+import src.characters.FreekNight as FreekNight;
 
 exports = Class(ui.View, function(supr) {
     
@@ -41,6 +43,30 @@ exports = Class(ui.View, function(supr) {
 			height: 1024
 		});
 
+		this._freekNight = new FreekNight({
+            superview: mainFrame,
+            x:50,
+			y:135,
+			attackPos:{
+				x:120,
+				y:135,
+			},
+            width:140,
+            height:168
+        });       
+        this._ninjaGirl = new NinjaGirl({
+            superview: mainFrame,
+            x:576-150,
+			y:135,
+			attackPos:{
+				x:576-220,
+				y:135,
+			},
+            flipX:true,
+            width:140,
+            height:168
+		}); 
+		
 		this._board = new Board({
 			superview: mainFrame,
             x: 30,
@@ -58,7 +84,7 @@ exports = Class(ui.View, function(supr) {
 		this._ingameMenu.on(DEF.EVENT_MENU_RESET,function(){
 			mthis._board.resetBoard();
 		});
-
+ 
 		this._ingameMenu.on(DEF.EVENT_GAMEOVER,function(){
 			mthis.emit(DEF.EVENT_GAMEOVER);
 		});
@@ -66,8 +92,17 @@ exports = Class(ui.View, function(supr) {
 			mthis.emit(DEF.EVENT_LEVELUP);
 		});
 
-		this._board.on(DEF.EVENT_SCORE,function(score){
-			mthis._ingameMenu.addScore(score);
+		this._board.on(DEF.EVENT_SCORE,function(score, player){
+			
+			console.log(score, player);
+			if(player=="user")
+			{
+				mthis._ingameMenu.addScore(score);
+				mthis._freekNight.attack(mthis._ninjaGirl);
+			}else{
+				mthis._ingameMenu.addTargetScore(score);
+				mthis._ninjaGirl.attack(mthis._freekNight);
+			}
 		});
 	};     
 	

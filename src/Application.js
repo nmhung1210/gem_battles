@@ -2,6 +2,7 @@
 import device;
 import ui.StackView as StackView;
 import ui.TextView as TextView;
+//import src.screens.LoadingScreen as LoadingScreen;
 import src.screens.LoadingScreen as LoadingScreen;
 import src.screens.SplashScreen as SplashScreen;
 import src.screens.LevelSelectScreen as LevelSelect;
@@ -11,7 +12,7 @@ import src.screens.LevelUpScreen as LevelUpScreen;
 import src.sounds.SoundManager as SoundMgr;
 
 import src.common.UserProfile as UserProfile;
-import src.common.define as DEF;
+import src.common.Define as DEF;  
 /* Your application inherits from GC.Application, which is
  * exported and instantiated when the game is run.
  */

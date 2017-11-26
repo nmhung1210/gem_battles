@@ -1,7 +1,7 @@
 import ui.View as View;
 import ui.resource.loader as Loader;
-import ui.SpriteView as SpriteView;
-import src.common.define as DEF;
+import ui.SpriteView as SpriteView; 
+import src.common.Define as DEF;  
 
 exports = Class(View, function(supr) {
     this.init = function(opts) {

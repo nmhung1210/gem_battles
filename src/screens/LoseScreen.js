@@ -2,8 +2,9 @@ import ui.View;
 import ui.TextView as TextView;
 import ui.ImageScaleView as ImageScaleView;
 import ui.widget.ButtonView as ButtonView;
-import src.common.define as DEF;
+import src.common.Define as DEF;  
 import src.sounds.SoundManager as SoundMgr;
+import src.characters.FreekNight as FreekNight;
 
 exports = Class(ImageScaleView, function(supr) {
     
@@ -18,21 +19,36 @@ exports = Class(ImageScaleView, function(supr) {
 			layoutWidth: '100%',
 			layoutHeight: '100%',
             centerX: true,
-            image:"resources/splash/splash.jpg",
+            image:"resources/images/ui/worldmap.jpg",
             x:0,
             y:0
         });
         supr(this, 'init', [opts]);      
         
         var mthis = this;
+
+        var freekNight = new FreekNight({
+            superview: this,
+            x:screenWidth/2-150,
+			y:screenHeight/2-180,
+			attackPos:{
+				x:120,
+				y:135,
+			},
+            width:300,
+            height:360,
+            defaultAnimation:"dead"
+        });   
+
+        freekNight.startAnimation("dead",{loop:true});
         
         new TextView({
             superview: this,
             x: (screenWidth / 2) - 200,
-            y: (screenHeight / 2) - 200,
+            y: (screenHeight / 2) - 360,
             width: 400,
             height: 200,
-            text: "GAME OVER",
+            text: "YOU LOSE!",
             size: 100,
             color: "white",
             shadowColor: '#111111',
@@ -42,7 +58,7 @@ exports = Class(ImageScaleView, function(supr) {
         new ButtonView({
             superview: this,
             x: screenWidth / 2 - 86,
-            y: screenHeight / 2,
+            y: screenHeight / 2+200,
             width: 172,
             height: 172,
             images: {

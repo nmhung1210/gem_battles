@@ -1,7 +1,7 @@
 import ui.View;
 import ui.ImageScaleView as ImageScaleView;
 import animate;
-import src.common.define as DEF;
+import src.common.Define as DEF;  
 import ui.ParticleEngine as ParticleEngine;
 import src.particles.Flame as Flame;
 
@@ -19,15 +19,11 @@ exports = Class(ui.View, function(supr) {
             up:null,
             down:null
         };
-        this._lock = 0;
+        this._swapGem = null;
+
         this._potentialMatches = [];
         this._nearMatches = [];
-        this._horizonalMatches = [];
-        this._verticalMatches = [];
-        this._matchesDir = {
-            V:false,
-            H:false
-        };
+        this._lock = 0;
 
         var mthis = this;
         this._background = new ImageScaleView({
@@ -48,24 +44,61 @@ exports = Class(ui.View, function(supr) {
 			height: opts.height
         });
 
-        this.setType(this._type);
+        this.setType(this._type, true);
     };     
 
     this.setType = function(type)
     {
         type = type % 5;
         this._type = type;
-        this._background.setImage("resources/images/gems/gem_0"+(type+1)+".png");
+        clearTimeout(this._setImgPid);
+        this._setImgPid = setTimeout(function(mthis){
+            mthis._background.setImage("resources/images/gems/gem_0"+(type+1)+".png");
+        },1,this);
+        return this;
+    }
+
+    this.setLockTime = function(time)
+    {
+        this._lock++;
+        setTimeout(function(mthis){
+            mthis._lock--;
+        },time,this);
+        return this;
+    }
+
+    this.isLocked = function()
+    {
+        return this._lock > 0;
+    }
+
+    this.resetType = function(check)
+    {
+        this.setType(Math.floor(Math.random() * 5) + 1  );
+        this.updateNearMatches();
+        while(check && this.isMatches())
+        {
+            this.setType(Math.floor(Math.random() * 5) + 1  );
+            this.updateNearMatches();
+        }
+        return this;
     }
 
     this.setNearItems = function(nearItems)
     {
         this._nearItems = nearItems;
+        return this;
     }
 
-    this.getNearItem = function(direction)
+    this.getNearItem = function(direction, offset)
     {
-        return this._nearItems[direction] || null;
+        offset = offset || 0;
+        var nearItem = this._nearItems[direction] || null;
+        while(nearItem && offset-- > 0)
+        {
+            nearItem = nearItem._nearItems[direction] || null;
+        }
+        return nearItem;
     }
 
     this.getType = function()
@@ -83,80 +116,75 @@ exports = Class(ui.View, function(supr) {
         }
     }
 
-    this.setLock = function(lock,zone)
-    {
-        this._lock += lock ? 1 : -1;
-        // console.log("["+this._row+","+this._col+"]["+lock+"]["+zone+"] = "+this._lock);
-    }
-
-    this.isLocked = function()
-    {
-        if(this._lock < 0)
-        {
-            console.warn("The Gem's lock is negative. Please double check your logic!");
-        }
-        return this._lock > 0;
-    }
-
     this.swap = function(item, force)
     {
-        this.setLock(true,"swap");
-        item.setLock(true,"swap");
+        this.setLockTime(DEF.GEM_SWAP_TIME);
+        item.setLockTime(DEF.GEM_SWAP_TIME);
+        item.setBelongTo(this.getBelongTo());
+
         var mthis = this;
         var pos1 = this.getOrgPos();
         var pos2 = item.getOrgPos();
+
+        //swap type
+        var mtype = mthis.getType();
+        mthis.setType(item.getType());
+        item.setType(mtype);
+
+        this.updateNearMatches();
+        item.updateNearMatches();
+
+        //do swap animation
         animate(this)
+            .then(pos2,0)
+            .then(
+                pos1,
+                DEF.GEM_SWAP_TIME,
+                animate.linear
+            );
+
+        return animate(item)
             .then(pos1,0)
             .then(
                 pos2,
                 DEF.GEM_SWAP_TIME,
                 animate.linear
-            ).then(pos1,0);
-
-        return animate(item)
-                .then(pos2,0)
-                .then(
-                    pos1,
-                    DEF.GEM_SWAP_TIME+1,
-                    animate.linear
-                ).then(pos2,0)
-                .then(function(){
-                    mthis.setLock(false,"swap");
-                    item.setLock(false,"swap");
-                    var mtype = mthis.getType();
-                    mthis.setType(item.getType());
-                    item.setType(mtype);
-                    if(!force)
-                    {
-                        mthis.updateNearMatches();
-                        item.updateNearMatches();
-                    }else{
-                        mthis.resetNearMatches();
-                        item.resetNearMatches();
-                    }
-                },0);
+            );
     }
 
-    this.fired = function()
+    this.setBelongTo = function(userId)
     {
-        if(this.isFired()) return
-        var mthis = this;
+        this._belongTo = userId;
+    }
+
+    this.getBelongTo = function()
+    {
+        return this._belongTo;
+    }
+
+    this.resetBelongTo = function()
+    {
+        this._belongTo = null;
+    }
+    
+    this.fire = function()
+    {
+        this.setLockTime(DEF.GEM_FIRING_TIME);
         this._fired = true;
-        this.setLock(true,"fired");
         return animate(this)
-             .then({opacity:0},DEF.GEM_FIRING_TIME*0.35)
-             .then({opacity:0.9},DEF.GEM_FIRING_TIME*0.35)
-             .then({opacity:0},DEF.GEM_FIRING_TIME*0.3)
-             .then(function(){
-                 mthis.setLock(false,"fired");
-             },0);
+            .then({opacity:0},DEF.GEM_FIRING_TIME*0.35)
+            .then({opacity:0.9},DEF.GEM_FIRING_TIME*0.35)
+            .then({opacity:0},DEF.GEM_FIRING_TIME*0.3);
     }
 
     this.tick = function(dt)
     {
         if(this.isFired())
         {
-            this._flame.emitFlameParticles();
+            if(Math.random() * 100 > 50)
+            {
+                this._flame.emitFlameParticles();
+            }
         }
         this._flame.runTick(dt);
     }
@@ -170,59 +198,22 @@ exports = Class(ui.View, function(supr) {
 
     this.fallDown = function(depth)
     {
+        this.setLockTime(DEF.GEM_FALLING_TIME);
         var pos1 = this.getOrgPos();
         var pos2 = this.getOrgPos(0,-depth);
-        var mthis = this;
-        mthis.setLock(true,"falldown");
+        this.resetFired();
         return animate(this)
             .then(pos2,0)
             .then(
                 pos1,
                 DEF.GEM_FALLING_TIME,
                 animate.easeOutBounce
-            ).then(function(){
-                mthis.setLock(false,"falldown");
-                mthis.updateNearMatches();
-            },0);
+            );
     }
 
     this.isFired = function()
     {
         return this._fired;
-    }
-
-    this.getEdge = function(direction)
-    {
-        var item = this;
-        var next = this.getNearItem(direction);
-        while(next)
-        {
-            item = next;
-            next = next.getNearItem(direction);
-        }
-        return item;
-    }
-
-    this.getNearItemAt = function(direction, depth)
-    {
-        var item = this;
-        while(depth-- > 0)
-        {
-            item = item.getNearItem(direction);
-            if(!item) return null;
-        }
-        return item;
-    }
-    
-    this.resetNearMatches = function()
-    {
-        this._matchesDir = {
-            V:false,
-            H:false
-        };
-        this._nearMatches = [];
-        this._horizonalMatches = [];
-        this._verticalMatches = [];
     }
 
     this.oppositeDirection = function(dir)
@@ -264,6 +255,7 @@ exports = Class(ui.View, function(supr) {
                 }
             }
         }
+        return this;
     }
 
     this.getPotentialMatches = function()
@@ -278,23 +270,26 @@ exports = Class(ui.View, function(supr) {
 
     this.updateNearMatches = function()
     {
-        this.resetNearMatches();
+        this._nearMatches = [];
         var hItems = [].concat(this.findMatches("left"),this.findMatches("right"));
         var vItems = [].concat(this.findMatches("up"), this.findMatches("down"));
         var matches = [];
         if(hItems.length >=2 )
         {
             matches = matches.concat(hItems);
-            this._matchesDir.H = true;
-            this._horizonalMatches = [this].concat(hItems);
         }
         if(vItems.length >=2 )
         {
             matches = matches.concat(vItems);
-            this._matchesDir.V = true;
-            this._verticalMatches = [this].concat(vItems);
         }
         this._nearMatches = [this].concat(matches);
+        for(var i = 0; i < this._nearMatches.length; i++)
+        {
+            this._nearMatches[i].setBelongTo(this.getBelongTo());
+        }
+        //update potential matches also
+        this.updatePotentialMatches();
+        return this;
     }
 
     this.findMatches = function(direction)
@@ -325,26 +320,6 @@ exports = Class(ui.View, function(supr) {
 
     this.isMatches = function()
     {
-        return (this._matchesDir.V || this._matchesDir.H);
-    }
-
-    this.getVerticalMatches = function()
-    {
-        return this._verticalMatches;
-    }
-
-    this.getHorizonalMatches = function()
-    {
-        return this._horizonalMatches;
-    }
-
-    this.isMatchesVertical = function()
-    {
-        return this._matchesDir.V;
-    }
-
-    this.isMatchesHorizontal = function()
-    {
-        return this._matchesDir.H;
+        return this._nearMatches.length >= 3;
     }
 });

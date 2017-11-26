@@ -1,5 +1,5 @@
 import ui.View as View;
-import src.common.define as DEF;
+import src.common.Define as DEF; 
 import ui.ImageView as ImageView;
 import ui.ImageScaleView as ImageScaleView;
 import ui.TextView as TextView;

@@ -1,11 +1,12 @@
 import ui.View as View;
 import src.objects.Gem as Gem;
 import math.geom.Vec2D as Vec2D;
-import src.common.define as DEF;
+import src.common.Define as DEF; 
 import ui.ParticleEngine as ParticleEngine;
 import src.sounds.SoundManager as SoundMgr;
-
+import animate;
 import src.particles.Flame as Flame;
+import src.common.Utils as Utils;
 
 exports = Class(View, function(supr) {
     
@@ -23,11 +24,25 @@ exports = Class(View, function(supr) {
         this._gems = [];
         this._showHintTime = 0;
         this._score_step = 0;
-        
+        this._changedGems = [];
+        this._firedItems = [];
+                
         this.initBoard();
         this.handleInput();
-        //this.autoPlay();
+        
     };     
+
+    this.addToUpdate = function(gem)
+    {
+        this._changedGems.push(gem);
+        return this;
+    }
+
+    this.addToFire = function(gem)
+    {
+        this._firedItems.push(gem.fire());
+        return this;
+    }
 
     this.handleInput = function()
     {
@@ -40,7 +55,12 @@ exports = Class(View, function(supr) {
         this.on('InputStart', function (event, point) {
             var row = Math.floor(point.y / cellHeight);
             var col = Math.floor(point.x / cellWidth);
-            mthis._selected_gem = board[row] ? board[row][col] ? board[row][col] : null : null;
+             var gem = board[row] ? board[row][col] ? board[row][col] : null : null;
+             if(gem && !gem.isLocked())
+             {
+                 gem.setBelongTo("user");
+                 mthis._selected_gem = gem;
+             }
             startTouchPoint = point;
         });
         
@@ -111,26 +131,29 @@ exports = Class(View, function(supr) {
         }
     }
 
-    this.resetGemType = function(gem)
+    this.isNeedResetBoard = function()
     {
-        gem.setType(Math.floor(Math.random() * 5) + 1  );
-        gem.updateNearMatches();
-        while(gem.isMatches())
+        for(var i=0; i<this._gems.length; i++)
         {
-            gem.setType(Math.floor(Math.random() * 5) + 1  );
-            gem.updateNearMatches();
+            var gem = this._gems[i];
+            if(gem.isPotentialMatches())
+            {
+                return false;
+            }            
         }
+        return true;
     }
 
     this.resetBoard = function()
     {
+        console.log("resetBoard");
         var cols  = this._opts.cols;
         var rows = this._opts.rows;
         var board = this._board;
         for (var y = 0; y < rows; y++) {
 			for (var x = 0; x < cols; x++) {
                 var gem = board[y][x];
-                this.resetGemType(gem);    
+                gem.resetType(true);
                 gem.resetFired();   
 			}
         }
@@ -141,56 +164,63 @@ exports = Class(View, function(supr) {
     {
         var selected_gem = this._selected_gem;
         var swap_direction = this._swap_direction;
+        var mthis = this;
         if(selected_gem && !selected_gem.isLocked() && swap_direction)
         {
             this.resetHintTime();
             var swap_gem = selected_gem.getNearItem(swap_direction);
-            if(swap_gem && !swap_gem.isLocked())
+            if(swap_gem && !selected_gem.isLocked())
             {
-                var mthis = this;
                 SoundMgr.getSound().play("move");
+                var matches = [];
                 selected_gem.swap(swap_gem).then(function(){
-                    if(!selected_gem.isMatches() && !swap_gem.isMatches())
+                    selected_gem.isMatches() && matches.push(selected_gem);
+                    swap_gem.isMatches() && matches.push(swap_gem);
+                    if(matches.length)
                     {
-                        SoundMgr.getSound().play("lose");
-                        selected_gem.swap(swap_gem, true);
+                        while(matches.length)
+                        {
+                            mthis.handleMatches(matches.pop());
+                        }
                     }
-                    selected_gem.isMatches() && mthis.handleMatches(selected_gem);
-                    swap_gem.isMatches() && mthis.handleMatches(swap_gem);
+                    else
+                    {
+                        selected_gem.swap(swap_gem); //swap back                        
+                    }
                 });
+                
             }
             this._selected_gem = null;
             this._swap_direction = null;
         }
     }
-
+    
     this.handleMatches = function(gem)
     {
+        var mthis = this;
         var matches = gem.getNearMatches();
         this._score_step += matches.length+(matches.length-3)*matches.length;
-        var fallCols = {};
+        this._score_belongTo = gem.getBelongTo();
+        var fallDepth = {};
         for(var i=0; i< matches.length; i++)
         {
             var item = matches[i];
             SoundMgr.getSound().play("star"+(i+1));
-            item.fired();
-            fallCols[item._col] = (fallCols[item._col] || 0)+1;
+            fallDepth[item._col] = (fallDepth[item._col] || 0)+1;
+            item.fire();
         }
-        setTimeout(function(mthis){
-            for(var col in fallCols)
+        animate(this).wait(DEF.GEM_FIRING_TIME).then(function(){
+            for(var col in fallDepth)
             {
-                mthis.fallColDown(col, fallCols[col]);
+                mthis.fallColDown(col, fallDepth[col]);
             }                
-        },DEF.GEM_FIRING_TIME, this);
+        });
     }
 
     this.fallColDown = function(col, depth)
     {
-        var cols  = this._opts.cols;
         var rows = this._opts.rows;
         var board = this._board;
-        var uprest = false;
-        var mthis = this;
         var gem = null;
         for(var y=rows-1; y >= 0; y--)
         {
@@ -209,84 +239,99 @@ exports = Class(View, function(supr) {
                 gem.setType(upgem.getType());
             }else
             {
-                this.resetGemType(gem);
+                gem.resetType(gem);
             }
-            gem.resetFired();
+            
+        }
+        //move gems down
+        for(var y=row; y>=0; y--)
+        {
+            gem = board[y][col];
             gem.fallDown(depth);
         }
 
-        setTimeout(function(){
-            SoundMgr.getSound().play("move");
-        },DEF.GEM_FALLING_TIME*0.35);
-
-        //recheck if have the next matches
-        setTimeout(function(){
-            for(var y=0; y<rows; y++)
+        //check for next matches
+        setTimeout(function(mthis){
+            for(var y=row; y>=0; y--)
             {
-                var gem = board[y][col];
-                gem.isMatches() && mthis.handleMatches(gem);
+                gem = board[y][col];
+                if(gem.isMatches() && !gem.isLocked())
+                {
+                    mthis.handleMatches(gem);
+                }
             }            
-        },DEF.GEM_FALLING_TIME+1);
+        },DEF.GEM_FALLING_TIME,this);
+        return this;
     }
 
-    this.checkPotentialMatches = function()
+    this.isPotentialMatches = function()
     {
         for(var i=0; i<this._gems.length; i++)
         {
             var gem = this._gems[i];
-            if(gem.isLocked())
-            {
-                return true;
-            }
-        }
-
-        for(var i=0; i<this._gems.length; i++)
-        {
-            var gem = this._gems[i];
-            gem.updatePotentialMatches();
             if(gem.isPotentialMatches())
             {
                 return true;
             }            
         }
-        //no more matches. Try to reset the board
-        for(var i=0; i<this._gems.length; i++)
-        {
-            var gem = this._gems[i];
-            gem.fired();
-        }
-        setTimeout(function(mthis){
-            mthis.resetBoard();             
-        },DEF.GEM_FIRING_TIME + DEF.GEM_FALLING_TIME + 50, this);
+        return false;
     }
+
+    this.updatePotentialMatches = function()
+    {
+        if(!this.isPotentialMatches())
+        {
+            for(var i=0; i<this._gems.length; i++)
+            {
+                var gem = this._gems[i];
+                gem.fire();
+            }
+            setTimeout(function(mthis){
+                while(!mthis.isPotentialMatches())
+                {
+                    mthis.resetBoard();
+                }
+            },DEF.GEM_FIRING_TIME,this);
+        }
+    }
+
+
 
     this.autoPlay = function()
     {
-        for(var i=0; i<this._gems.length; i++)
+        if(Math.random()*100 > 80)
         {
-            var gem = this._gems[i];
-            if(gem.isLocked())
+            for(var i=0; i<this._gems.length; i++)
             {
-                setTimeout(function(mthis){
-                    mthis.autoPlay();             
-                },DEF.GEM_FIRING_TIME + DEF.GEM_FALLING_TIME+200 , this);
-                return false;
+                var gem = this._gems[i];
+                if(gem.isPotentialMatches())
+                {
+                    var pmatches = gem.getPotentialMatches()[0];
+                    if(!pmatches[0].isLocked() && !pmatches[1].isLocked())
+                    {
+                        this._selected_gem = pmatches[0];
+                        this._swap_direction = pmatches[2];
+                        pmatches[0].setBelongTo("bot");
+                        pmatches[1].setBelongTo("bot");
+                    }
+                }
+            }
+        }else
+        {
+            var dirs = ["left","right","up","down"];
+            var igem = Utils.randomBetween(0,this._gems.length-1);
+            var idir = Utils.randomBetween(0,dirs.lenght-1);
+            var gem = this._gems[igem];
+            var dir = dirs[idir];
+            if(!gem.isLocked())
+            {
+                this._selected_gem = gem;
+                this._swap_direction = dir;
+                gem.setBelongTo("bot");
+                gem.getNearItem(dir) && gem.getNearItem(dir).setBelongTo("bot");
             }
         }
-        for(var i=0; i<this._gems.length; i++)
-        {
-            var gem = this._gems[i];
-            if(gem.isPotentialMatches())
-            {
-                var pMatches = gem.getPotentialMatches();
-                this._selected_gem = pMatches[0][0];
-                this._swap_direction = pMatches[0][2];
-                break;
-            }
-        }
-        setTimeout(function(mthis){
-            mthis.autoPlay();             
-        },DEF.GEM_FIRING_TIME + DEF.GEM_FALLING_TIME+200 , this);
+        return this;
     }
 
     this.isNeedHint = function()
@@ -322,16 +367,30 @@ exports = Class(View, function(supr) {
     {
         if(this._score_step)
         {
-            this.emit(DEF.EVENT_SCORE,this._score_step);
+            this.emit(DEF.EVENT_SCORE,this._score_step, this._score_belongTo);
             this._score_step = 0;
+        }
+    }
+
+    this.updateMatches = function()
+    {
+        for(var i=0; i<this._gems.length; i++)
+        {
+            var gem = this._gems[i];
+            gem.updateNearMatches();
         }
     }
    
     this.tick = function(dt)
     {
         this.handleSwap();
-        this.checkPotentialMatches();
         this.updateHint();
         this.updateScore();
+        this.updateMatches();
+        if(!animate.getGroup().isActive())
+        {
+            this.updatePotentialMatches();
+            this.autoPlay();
+        }
     }
 });

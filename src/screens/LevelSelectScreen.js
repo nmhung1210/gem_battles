@@ -1,9 +1,9 @@
 import ui.View;
 import ui.ImageScaleView as ImageScaleView;
 import ui.widget.ButtonView as ButtonView;
-import ui.ScrollView as ScrollView;
+import ui.ScrollView as ScrollView; 
 import ui.resource.Image as Image;
-import src.common.define as DEF;
+import src.common.Define as DEF;
 import src.sounds.SoundManager as SoundMgr;
 
 var LevelPossitions = [

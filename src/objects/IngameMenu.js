@@ -1,6 +1,6 @@
 import ui.View;
 import src.sounds.SoundManager as SoundMgr;
-import src.common.define as DEF;
+import src.common.Define as DEF; 
 import ui.widget.ButtonView as ButtonView;
 import ui.ImageView as ImageView;
 import ui.TextView as TextView;
@@ -12,6 +12,7 @@ exports = Class(ui.View, function(supr) {
     
     this.init = function(opts)
     {
+        SoundMgr.getSound().setMuted(true);
         opts = merge(opts,{
             level:1
         });
@@ -22,6 +23,7 @@ exports = Class(ui.View, function(supr) {
         this._score = 0;
         this._timeout = DEF.GAME_DURATION;
         this._targetScore = opts.level * 10;
+        
 
         new ButtonView({
             superview: this,
@@ -122,7 +124,7 @@ exports = Class(ui.View, function(supr) {
 			y: height-100,
 			height: 50,
             width: 400,
-            progress:50
+            progress:100
         });
         
         this.addScore(0);
@@ -131,15 +133,20 @@ exports = Class(ui.View, function(supr) {
     this.addScore = function(score)
     {
         this._score += score;
-        this._progress.setLabel([this._score,this._targetScore].join(" / "));
-        this._progress.setProgress(this._score*100/(this._targetScore||1));
+        this._progress.setLabel([this._score,this._targetScore].join(" VS "));
+    }
+
+    this.addTargetScore = function(score)
+    {
+        this._targetScore += score;
+        this._progress.setLabel([this._score,this._targetScore].join(" VS "));
     }
 
     this.setLevel = function(level)
     {
         this._is_completed = false;
         this._score = 0;
-        this._targetScore = (level + 1) * DEF.LEVEL_SCORE_TARGET;
+        this._targetScore = 0;
         this._timeout = DEF.GAME_DURATION;
         this.addScore(0);
     }
@@ -147,17 +154,15 @@ exports = Class(ui.View, function(supr) {
     this.checkComplete = function()
     {
         if(this._is_completed) return true;
-        if(this._timeout <= 0 && this._score < this._targetScore)
+        if(this._timeout <= 0 )
         {
             this._is_completed = true;
-            this.emit(DEF.EVENT_GAMEOVER);
-        }
-        if(this._score >= this._targetScore)
-        {
-            this._is_completed = true;
-            setTimeout(function(mthis){
-                mthis.emit(DEF.EVENT_LEVELUP);
-            },DEF.GEM_FALLING_TIME+DEF.GEM_FIRING_TIME,this);
+            if(this._score < this._targetScore)
+            {
+                this.emit(DEF.EVENT_GAMEOVER);
+            }else{
+                this.emit(DEF.EVENT_LEVELUP);
+            }
         }
     }
 
