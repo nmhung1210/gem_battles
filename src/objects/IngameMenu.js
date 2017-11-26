@@ -12,7 +12,6 @@ exports = Class(ui.View, function(supr) {
     
     this.init = function(opts)
     {
-        SoundMgr.getSound().setMuted(true);
         opts = merge(opts,{
             level:1
         });

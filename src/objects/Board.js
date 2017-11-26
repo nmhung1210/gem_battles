@@ -250,6 +250,10 @@ exports = Class(View, function(supr) {
             gem.fallDown(depth);
         }
 
+        setTimeout(function(){
+            SoundMgr.getSound().play("move");
+        },DEF.GEM_FALLING_TIME*0.4);
+
         //check for next matches
         setTimeout(function(mthis){
             for(var y=row; y>=0; y--)
@@ -259,7 +263,7 @@ exports = Class(View, function(supr) {
                 {
                     mthis.handleMatches(gem);
                 }
-            }            
+            }        
         },DEF.GEM_FALLING_TIME,this);
         return this;
     }
