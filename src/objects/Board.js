@@ -8,6 +8,8 @@ import animate;
 import src.particles.Flame as Flame;
 import src.common.Utils as Utils;
 
+import src.common.UserProfile as UserProfile;
+
 exports = Class(View, function(supr) {
     
     this.init = function(opts)
@@ -303,7 +305,7 @@ exports = Class(View, function(supr) {
 
     this.autoPlay = function()
     {
-        if(Math.random()*100 > 80)
+        if(Math.random()*100 > (100-UserProfile.getProfile().level * 10))
         {
             for(var i=0; i<this._gems.length; i++)
             {

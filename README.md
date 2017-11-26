@@ -7,6 +7,18 @@ Gem's Battles
 
 Gem's Battles is basically a kind of Match Three game. It was developed base on DevKit game engine. For what's DevKit, you can get more infomation at https://github.com/gameclosure/devkit.
 
+## DEMO
+    You can get fun with the DEMO at https://nmhung1210.github.io/gem_battles/
+
+
+## Game's features
+1. The swapping game for a battle. You need to have valid swap in order of attack the enemy.
+2. The AI Bot was implemented to play VS battle with player. These is lots power of the BOT. It's not just random...
+3. When you have a valid swap, you will gain score for it. More matches gems would have more points.
+4. These are particles, flame effects, sound effects implemented to improve experiences of the battle.
+5. If these is no move from player for a time perios, the HINT would be show to help player keep track.
+6. Each level has different BOT's powers. It's smarter for higher level.
+
 ## Assets notices
 
 Almost assets using in this projects is provided by BlackStorm Lab. They are also some extra assets (buttons, level map) had been downloaded from Google Search and Free2DAssets page at http://www.gameart2d.com/freebies.html. They're licensed free for non-commercial sharing. 
