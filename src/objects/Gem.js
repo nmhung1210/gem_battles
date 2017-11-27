@@ -20,7 +20,7 @@ exports = Class(ui.View, function(supr) {
             down:null
         };
         this._swapGem = null;
-
+        this._lockPids = [];
         this._potentialMatches = [];
         this._nearMatches = [];
         this._lock = 0;
@@ -61,7 +61,6 @@ exports = Class(ui.View, function(supr) {
     this.setLockTime = function(time)
     {
         this._lock++;
-        this._lockPids = this._lockPids || [];
         var pid = setTimeout(function(mthis){
             mthis._lock--;
         },time,this);
