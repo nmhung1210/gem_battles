@@ -193,7 +193,7 @@ exports = Class(View, function(supr) {
         {
             return false;
         } 
-        var swap = this._moveActions.pop();
+        var swap = this._moveActions.shift();
         var selected_gem = swap[0];
         var swap_direction = swap[1];
         var mthis = this;
