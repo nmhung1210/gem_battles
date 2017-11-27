@@ -59,7 +59,7 @@ exports = Class(View, function(supr) {
 
     this.resetSwapQueue = function()
     {
-        mthis._moveActions = [];
+        this._moveActions = [];
         return this;
     }
 
