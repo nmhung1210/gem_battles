@@ -28,6 +28,7 @@ exports = Class(View, function(supr) {
         this._score_step = 0;
         this._changedGems = [];
         this._firedItems = [];
+        this._moveActions = [];
                 
         this.initBoard();
         this.handleInput();
@@ -46,6 +47,16 @@ exports = Class(View, function(supr) {
         return this;
     }
 
+    this.addToSwap = function(gem, dir, player)
+    {
+        this._moveActions.push([
+            gem,
+            dir,
+            player
+        ]);
+        return this;
+    }
+
     this.handleInput = function()
     {
         var mthis = this;
@@ -58,9 +69,8 @@ exports = Class(View, function(supr) {
             var row = Math.floor(point.y / cellHeight);
             var col = Math.floor(point.x / cellWidth);
              var gem = board[row] ? board[row][col] ? board[row][col] : null : null;
-             if(gem && !gem.isLocked())
+             if(gem)
              {
-                 gem.setBelongTo("user");
                  mthis._selected_gem = gem;
              }
             startTouchPoint = point;
@@ -83,6 +93,13 @@ exports = Class(View, function(supr) {
                     else                        
                     {
                         mthis._swap_direction = delta.x < 0 ? "left" : "right";
+                    }
+                    if(mthis._selected_gem)
+                    {
+                        mthis.addToSwap(mthis._selected_gem, mthis._swap_direction, "user");
+                        mthis._selected_gem = null;
+                        mthis._swap_direction = null;
+                        startTouchPoint = null;
                     }  
                 }
             }
@@ -165,15 +182,23 @@ exports = Class(View, function(supr) {
 
     this.handleSwap = function()
     {
-        var selected_gem = this._selected_gem;
-        var swap_direction = this._swap_direction;
+        if(this._moveActions.length == 0 )
+        {
+            return false;
+        } 
+        var swap = this._moveActions.pop();
+        var selected_gem = swap[0];
+        var swap_direction = swap[1];
         var mthis = this;
+        var player = swap[2];
         if(selected_gem && !selected_gem.isLocked() && swap_direction)
         {
             this.resetHintTime();
             var swap_gem = selected_gem.getNearItem(swap_direction);
             if(swap_gem && !selected_gem.isLocked())
             {
+                selected_gem.setBelongTo(player);
+                swap_gem.setBelongTo(player);
                 SoundMgr.getSound().play("move");
                 var matches = [];
                 selected_gem.swap(swap_gem).then(function(){
@@ -193,8 +218,6 @@ exports = Class(View, function(supr) {
                 });
                 
             }
-            this._selected_gem = null;
-            this._swap_direction = null;
         }
     }
     
@@ -302,8 +325,6 @@ exports = Class(View, function(supr) {
         }
     }
 
-
-
     this.autoPlay = function()
     {
         if(Math.random()*100 > (100-UserProfile.getProfile().level * 10))
@@ -316,10 +337,7 @@ exports = Class(View, function(supr) {
                     var pmatches = gem.getPotentialMatches()[0];
                     if(!pmatches[0].isLocked() && !pmatches[1].isLocked())
                     {
-                        this._selected_gem = pmatches[0];
-                        this._swap_direction = pmatches[2];
-                        pmatches[0].setBelongTo("bot");
-                        pmatches[1].setBelongTo("bot");
+                        this.addToSwap(pmatches[0],pmatches[2],"bot");
                     }
                 }
             }
@@ -327,15 +345,12 @@ exports = Class(View, function(supr) {
         {
             var dirs = ["left","right","up","down"];
             var igem = Utils.randomBetween(0,this._gems.length-1);
-            var idir = Utils.randomBetween(0,dirs.lenght-1);
+            var idir = Utils.randomBetween(0,dirs.length-1);
             var gem = this._gems[igem];
             var dir = dirs[idir];
             if(!gem.isLocked())
             {
-                this._selected_gem = gem;
-                this._swap_direction = dir;
-                gem.setBelongTo("bot");
-                gem.getNearItem(dir) && gem.getNearItem(dir).setBelongTo("bot");
+                this.addToSwap(gem,dir,"bot");
             }
         }
         return this;
