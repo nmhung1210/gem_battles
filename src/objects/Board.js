@@ -57,6 +57,12 @@ exports = Class(View, function(supr) {
         return this;
     }
 
+    this.resetSwapQueue = function()
+    {
+        mthis._moveActions = [];
+        return this;
+    }
+
     this.handleInput = function()
     {
         var mthis = this;
@@ -178,6 +184,7 @@ exports = Class(View, function(supr) {
 			}
         }
         this.resetHintTime();
+        this.resetSwapQueue();
     }
 
     this.handleSwap = function()
