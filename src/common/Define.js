@@ -7,7 +7,7 @@ exports.GAMEOVER_ANIM_TIME = 5000;
 
 exports.GAME_DURATION = 60000;
 
-exports.DIRECTIONS = ["left","right","up","down"];
+exports.DIRECTIONS = ["left", "right", "up", "down"];
 
 exports.EVENT_LOADING_COMPLETE = "loading_complete";
 exports.EVENT_GAME_START = "gamestart";

@@ -28,9 +28,8 @@ exports.getSound = function () {
       path: 'effects',
       background: false
     });
-    for(var i=1; i<=8; i++)
-    {
-      sound.addSound('star'+i, {
+    for (var i = 1; i <= 8; i++) {
+      sound.addSound('star' + i, {
         path: 'effects',
         background: false
       });
@@ -41,11 +40,9 @@ exports.getSound = function () {
 };
 
 
-exports.stopAll = function()
-{
+exports.stopAll = function () {
   var soundMgr = exports.getSound();
-  for(var s in soundMgr._sounds)
-  {
+  for (var s in soundMgr._sounds) {
     soundMgr.stop(s);
   }
 }
